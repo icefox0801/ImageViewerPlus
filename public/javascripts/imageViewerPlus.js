@@ -10,10 +10,12 @@
         this.maxIndex = album.length;
         this.album = album;
         this.$elem = $(elem);
-        this.$wrapper = options.wrapper === false ? $('body') : $(wrapper);
+        this.$wrapper = options.wrapper === false ? $('body') : $(options.wrapper);
         this.$img = null;
         this.$navi = null;
+        this.$ul = null;
         this.list = [];
+        this.transitionSetting = options.transitionSetting;
         this.init(options);
 
     };
@@ -31,12 +33,12 @@
             _t.$elem.hide();
             _t.$elem.addClass('iv-container');
             _t.$elem.append(_t.createWrapper(width, height));
-            _t.$elem.append(_t.createNavi(_t.album, width, options.transitionSetting));
+            _t.$elem.append(_t.createNavi(_t.album, width));
             _t.setIndex(_t.currentIndex);
             _t.$elem.show();
         },
 
-        createWrapper: function (width, height, settings) {
+        createWrapper: function (width, height) {
 
             var _t = this,
                 $wrapper = $('<div/>'),
@@ -56,7 +58,7 @@
             $img.css({
                 'max-width': width,
                 'max-height': height
-            })
+            });
             // $img[0].src = _t.album[_t.currentIndex];
 
             $wrapper.append($prev).append($next).append($content);
@@ -85,7 +87,7 @@
 
         },
 
-        createNavi: function (album, width, settings) {
+        createNavi: function (album, width) {
 
             var _t = this,
                 $navi = $('<div/>'),
@@ -94,8 +96,8 @@
                 $ul = $('<ul/>'),
                 list = [],
                 thumbImg = [],
-                fadeTime = settings.thumbFadeTime,
-                opacity = settings.thumbOpacity,
+                fadeTime = _t.transitionSetting.thumbFadeTime,
+                opacity = _t.transitionSetting.thumbOpacity,
                 len = album.length,
                 ulWidth = ( 100 + 5 ) * len; // #FIXME: magic number
 
@@ -144,14 +146,13 @@
                     idx = $t.index();
 
                 $t.find('img').is(':animated') && $t.find('img').dequeue();
-                _t.$navi.find('.selected').removeClass('selected').find('img').fadeTo(fadeTime, opacity);
-                $t.addClass('selected').find('img').fadeTo(fadeTime, 1);
                 _t.setIndex(idx);
 
             });
 
             $navi.append($ul);
             _t.$navi = $navi;
+            _t.$ul = $ul;
             _t.list = list;
 
             return $navi;
@@ -163,9 +164,56 @@
             var _t = this;
 
             _t.currentIndex = index;
-            _t.$img[0].src = _t.album[index];
+            _t.transformImage(index);
+            _t.highlightThumb(index);
+            _t.centerSelectedThumb(index);
 
+        },
 
+        highlightThumb: function (index) {
+
+            var _t = this,
+                fadeTime = _t.transitionSetting.thumbFadeTime,
+                opacity = _t.transitionSetting.thumbOpacity;
+
+            _t.$navi.find('.selected').removeClass('selected').find('img').fadeTo(fadeTime, opacity);
+            _t.list[index].addClass('selected').find('img').fadeTo(fadeTime, 1);
+        },
+
+        centerSelectedThumb: function (index) {
+
+            var _t = this,
+                offsetLeft,
+                offsetRight,
+                scrollLeft,
+                scrollRight,
+                marginLeft,
+                maxMarginLeft;
+
+            offsetLeft = (100 + 5) * index; // #FIXME: magic number
+            scrollLeft = (_t.$navi.width() - 100) / 2;
+            maxMarginLeft = _t.$ul.width() - _t.$navi.width();
+            marginLeft = offsetLeft - scrollLeft;
+            marginLeft =  marginLeft < 0 ? 0 : (marginLeft > maxMarginLeft ? maxMarginLeft : marginLeft);
+
+            _t.$ul.is(':animated') && _t.$ul.stop();
+            _t.$ul.animate({'margin-left': '-' + marginLeft + 'px'}, 500);
+        },
+
+        scrollThumb: function (offset) {
+
+        },
+
+        transformImage: function (index) {
+
+            var _t = this,
+                fadeTime = _t.transitionSetting.fadeTime,
+                opacity = _t.transitionSetting.opacity;
+
+            _t.$img.is(':animated') && _t.$img.dequeue();
+            _t.$img.fadeTo(fadeTime, opacity, function() {
+                _t.$img[0].src = _t.album[index];
+            }).fadeTo(fadeTime, 1);
         },
 
         preview: function (index) {
@@ -182,11 +230,7 @@
 
         switchImage: function (index) {
 
-        },
-
-        scrollThumb: function (offset) {
-
-        },
+        }
 
     };
 
@@ -235,13 +279,16 @@
 
         width: 600,
         height: 500,
-        thumbHeight: 60,
+        thumbHeight: 80,
+        thumbWidth: 100,
         currentIndex: 0,
         wrapper: false, // jQuery object or false, if set to false, the wrapper is body instead
         position: 'fixed', // 'fixed'|'absolute'|'normal'
         mask: true, // true|false
         loop: true, // true|false
         transitionSetting: {
+            opacity: 0.8,
+            fadeTime: 100, // ms
             thumbOpacity: 0.6,
             thumbFadeTime: 200 // ms
         } 

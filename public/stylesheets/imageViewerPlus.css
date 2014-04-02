@@ -1,13 +1,20 @@
+.iv-content
+{
+    display: table-cell;
+    vertical-align: middle;
+    background: url('../images/transp_bg.png');
+}
+
 .iv-navi
 {
     overflow: hidden;
-
 }
 
 .iv-navi ul.iv-thumb-list
 {
     padding-left: 0;
     list-style-type: none;
+    margin-left: 0;
 }
 
 .iv-navi ul.iv-thumb-list:after
