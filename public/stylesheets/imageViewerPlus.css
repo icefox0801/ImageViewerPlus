@@ -1,0 +1,49 @@
+.iv-navi
+{
+    overflow: hidden;
+
+}
+
+.iv-navi ul.iv-thumb-list
+{
+    padding-left: 0;
+    list-style-type: none;
+}
+
+.iv-navi ul.iv-thumb-list:after
+{
+    display: block;
+    clear: both;
+    overflow: hidden;
+
+    height: 0;
+
+    content: '';
+}
+
+.iv-navi ul > li > img
+{
+    max-width: 100px;
+    height: 80px;
+
+}
+
+.iv-navi ul > li
+{
+    float: left;
+
+    width: 100px;
+    height: 80px;
+    margin-right: 5px;
+
+    cursor: pointer;
+}
+
+.iv-navi ul > .selected > img {
+    opacity: 1!important;
+}
+
+.iv-navi ul > .hover > img
+{
+
+}

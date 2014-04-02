@@ -1,0 +1,15 @@
+doctype html
+html
+    head
+        title= title
+        link(rel="stylesheet",href="/stylesheets/style.css")
+        link(rel="stylesheet",href="/stylesheets/imageViewerPlus.css")
+        script(type="text/javascript",src="/javascripts/jquery.min.js")
+        script(type="text/javascript",src="/javascripts/imageViewerPlus.js")
+        script(type="text/javascript").
+            var album = [];
+            for(var idx = 1; idx < 10; idx++) {
+                album[album.length] = '/images/demo/demo0' + idx + '.jpg';
+            }
+    body
+        block content
