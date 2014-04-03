@@ -3,9 +3,16 @@
  *
  **/
 (function($){
-
-    /* ImageViewer类定义*/
+    /* ImageViewer类定义，ImageViewer类封装并暴露了ImageSlider和ImageTool类的方法 */
     var ImageViewer = function (elem, album, options) {
+
+        var imageSlider = new ImageSlider(elem, album, options);
+
+        return this;
+    };
+
+    /* ImageSlider类定义*/
+    var ImageSlider = function (elem, album, options) {
 
         this.currentIndex = options.currentIndex;
         this.maxIndex = album.length - 1;
@@ -23,9 +30,9 @@
 
     };
     /* ImageViewer方法定义*/
-    ImageViewer.prototype = {
+    ImageSlider.prototype = {
 
-        constructor: ImageViewer,
+        constructor: ImageSlider,
 
         init: function (options) {
 
@@ -312,6 +319,10 @@
         },
 
         refactoring: function () {
+
+            var _t = this;
+
+            return _t;
 
         },
 
