@@ -1,56 +1,62 @@
-.iv-content
-{
-    display: table-cell;
-    vertical-align: middle;
-    background: url('../images/transp_bg.png');
-}
+.iv-wrapper .iv-content {
+  margin: 0 40px;
+  vertical-align: middle;
+  background: url("../images/transp_bg.png"); }
 
-.iv-navi
-{
+.iv-navi {
+  position: relative;
+  padding: 0;
+  background: #414246; }
+  .iv-navi .iv-navi-wrapper {
     overflow: hidden;
-}
-
-.iv-navi ul.iv-thumb-list
-{
-    padding-left: 0;
-    list-style-type: none;
-    margin-left: 0;
-}
-
-.iv-navi ul.iv-thumb-list:after
-{
-    display: block;
-    clear: both;
-    overflow: hidden;
-
-    height: 0;
-
-    content: '';
-}
-
-.iv-navi ul > li > img
-{
-    max-width: 100px;
-    height: 80px;
-
-}
-
-.iv-navi ul > li
-{
-    float: left;
-
-    width: 100px;
-    height: 80px;
-    margin-right: 5px;
-
+    margin: 0 40px;
+    padding: 10px 0; }
+  .iv-navi ul.iv-thumb-list {
+    margin: 0;
+    padding: 0;
+    list-style-type: none; }
+    .iv-navi ul.iv-thumb-list:after {
+      display: block;
+      clear: both;
+      overflow: hidden;
+      height: 0;
+      content: ''; }
+    .iv-navi ul.iv-thumb-list > li {
+      float: left;
+      width: 100px;
+      height: 80px;
+      margin-right: 5px;
+      cursor: pointer;
+      background-color: #313131; }
+      .iv-navi ul.iv-thumb-list > li img {
+        max-width: 100px;
+        max-height: 80px;
+        _width: 100px;
+        _height: 80px; }
+    .iv-navi ul.iv-thumb-list.selected > img {
+      opacity: 1 !important; }
+  .iv-navi .iv-thumb-indicator {
+    position: absolute;
+    top: 0;
+    width: 30px;
+    height: 100px;
+    margin: 0 5px;
     cursor: pointer;
-}
-
-.iv-navi ul > .selected > img {
-    opacity: 1!important;
-}
-
-.iv-navi ul > .hover > img
-{
-
-}
+    opacity: 0.3; }
+    .iv-navi .iv-thumb-indicator.hover {
+      opacity: 1; }
+    .iv-navi .iv-thumb-indicator.disabled {
+      display: none; }
+    .iv-navi .iv-thumb-indicator span {
+      width: 19px;
+      height: 23px;
+      display: block;
+      margin: 38.5px auto; }
+    .iv-navi .iv-thumb-indicator.prev {
+      left: 0; }
+      .iv-navi .iv-thumb-indicator.prev span {
+        background: url("../images/tab.png") 0 -24px; }
+    .iv-navi .iv-thumb-indicator.next {
+      right: 0; }
+      .iv-navi .iv-thumb-indicator.next span {
+        background: url("../images/tab.png") 0 -48px; }

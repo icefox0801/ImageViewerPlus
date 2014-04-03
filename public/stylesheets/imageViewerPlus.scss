@@ -1,0 +1,108 @@
+$thumbHeight: 80px;
+$thumbWidth: 100px;
+$naviWrapperPadding: 10px;
+$thumbIndicatorWidth: 30px;
+$thumbIndicatorMargin: 5px;
+$thumbIndicatorHeight: $thumbHeight + $naviWrapperPadding * 2;
+$margin: $thumbIndicatorWidth + $thumbIndicatorMargin * 2;
+$thumbListMargin: 5px;
+$thumbIndicatorIconTop: ($thumbIndicatorHeight - 23px) / 2;
+
+.iv-wrapper 
+{
+    .iv-content
+    {
+        margin: 0 $margin;
+        vertical-align: middle;
+        background: url('../images/transp_bg.png');
+    }
+}
+
+.iv-navi
+{
+    position: relative;
+    padding: 0;
+    background: #414246;
+    .iv-navi-wrapper
+    {
+        overflow: hidden;
+        margin: 0 $margin;
+        padding: $naviWrapperPadding 0;
+    }
+    ul.iv-thumb-list
+    {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+        &:after
+        {
+            display: block;
+            clear: both;
+            overflow: hidden;
+            height: 0;
+            content: '';
+        }
+
+        & > li
+        {
+            float: left;
+            width: $thumbWidth;
+            height: $thumbHeight;
+            margin-right: $thumbListMargin;
+            cursor: pointer;
+            background-color: #313131;
+            img
+            {
+                max-width: $thumbWidth;
+                max-height: $thumbHeight;
+                _width: $thumbWidth;
+                _height: $thumbHeight;
+            }
+        }
+        &.selected > img
+        {
+            opacity: 1!important;
+        }
+    }
+
+    .iv-thumb-indicator
+    {
+        position: absolute;
+        top: 0;
+        width: $thumbIndicatorWidth;
+        height: $thumbIndicatorHeight;
+        margin: 0 $thumbIndicatorMargin;
+        cursor: pointer;
+        opacity: 0.3;
+        &.hover {
+            opacity: 1;
+        }
+        &.disabled {
+            display: none;
+        }
+        span
+        {
+            width: 19px;
+            height: 23px;
+            display: block;
+            margin: $thumbIndicatorIconTop auto;
+        }
+        &.prev
+        {
+            left: 0;
+            span
+            {
+                background: url('../images/tab.png') 0 -24px;
+            }
+        }
+        &.next
+        {
+            right: 0;
+            span
+            {
+                background: url('../images/tab.png') 0 -48px;
+            }
+        }
+    }
+
+}
