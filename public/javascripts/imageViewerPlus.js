@@ -4,7 +4,7 @@
  **/
 (function($){
 
-    /* ImageViewer Class Definition*/
+    /* ImageViewer类定义*/
     var ImageViewer = function (elem, album, options) {
 
         this.currentIndex = options.currentIndex;
@@ -22,7 +22,7 @@
         this.init(options);
 
     };
-
+    /* ImageViewer方法定义*/
     ImageViewer.prototype = {
 
         constructor: ImageViewer,
@@ -141,6 +141,8 @@
                 $t.not('.selected').find('img').fadeTo(fadeTime, 1);
                 $t.addClass('hover');
 
+                _t.transformImage(index);
+
             }).on('mouseout', function (event) {
 
                 var $t = $(this);
@@ -160,14 +162,16 @@
 
             });
 
-            $ul.on('mouseout', function (event) {
+            /* $ul.on('mouseout', function (event) {
 
                 var $t = $(this),
                     index = _t.$ul.find('.selected').index();
 
+                if(this !== event.target) return false;
+
                 _t.transformImage(index);
 
-            });
+            }); */
 
             var isHovered = false,
                 slideTimer,
@@ -379,7 +383,7 @@
             enableHoverSwicth: true, // true|false 是否在鼠标悬停时切换图片（悬停结束后切换回原图片）
             enableHoverSlide: false, // true|false 是否在“前进”、“后退”按钮悬停时滚动图片
             slideSpeed: 2000, // 滚动速度：pixels/s
-            opacity: 0.8,
+            opacity: 0.9,
             fadeTime: 100, // ms
             thumbOpacity: 0.5,
             thumbFadeTime: 200, // ms
