@@ -2,7 +2,6 @@ doctype html
 html
     head
         title= title
-        link(rel="stylesheet",href="/stylesheets/style.css")
         link(rel="stylesheet",href="/stylesheets/imageViewerPlus.css")
         script(type="text/javascript",src="/javascripts/jquery.min.js")
         script(type="text/javascript",src="/javascripts/imageViewerPlus.js")
@@ -11,6 +10,10 @@ html
             for(var idx = 1; idx < 19; idx++) {
                 album[album.length] = '/images/demo/demo' + (idx < 10 ? '0' : '') + idx + '.jpg';
             }
-
+            $(function () {
+                window.ivr1 =  $('#iv1').imageViewer(album);
+                window.ivr =  $('.iv').imageViewer(album);
+                window.ivr2 =  $('#iv2').imageViewer(album);
+            });
     body
         block content
