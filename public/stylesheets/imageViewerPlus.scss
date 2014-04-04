@@ -4,17 +4,71 @@ $naviWrapperPadding: 10px;
 $thumbIndicatorWidth: 30px;
 $thumbIndicatorMargin: 5px;
 $thumbIndicatorHeight: $thumbHeight + $naviWrapperPadding * 2;
+$paddingTop: 43px;
 $margin: $thumbIndicatorWidth + $thumbIndicatorMargin * 2;
 $thumbListMargin: 5px;
 $thumbIndicatorIconTop: ($thumbIndicatorHeight - 23px) / 2;
+$toobarWidth: 300px;
+@mixin iv-btn($selector, $positionY) {
+    &#{$selector}
+    {
+        background-position: 0 $positionY;
+        &:hover
+        {
+            background-position: -43px $positionY;
+        }
+    }
+}
 
-.iv-wrapper 
+.iv-container 
 {
+    margin: 0;
+    padding: $paddingTop 0 0;
+    position: relative;
     .iv-content
     {
+        position: relative;
         margin: 0 $margin;
         vertical-align: middle;
-        background: url('../images/transp_bg.png');
+        background: url("../images/transp_bg.png");
+        img.iv-image-enhanced 
+        {
+            border:0;
+            position: absolute;
+            left:0;
+            top:0;
+            -moz-user-select:none;
+            -khtml-user-select:none;
+            user-select:none;
+        }
+    }
+    .iv-toolbar
+    {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        .iv-toolbar-con
+        {
+            width: $toobarWidth;
+            margin: 0 auto;
+            a 
+            {
+                text-decoration: none;
+                font-size: 14px;
+                color:#fff;
+                width:40px;
+                height:40px;
+                display: inline-block;
+                margin:0 10px;
+                background-image: url("../images/v.png");
+                @include iv-btn(".iv-rotate-left-btn", -40px);
+                @include iv-btn(".iv-rotate-right-btn", 0);
+                @include iv-btn(".iv-zoom-in-btn", -80px);
+                @include iv-btn(".iv-zoom-out-btn", -120px);
+                @include iv-btn(".iv-close-btn", -160px);
+            }
+        }
+        
     }
 }
 
