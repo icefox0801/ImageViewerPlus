@@ -5,12 +5,13 @@
 (function($){
 
     var isIE = !+[1,],
+        isIELt9 = navigator.userAgent.match(/(MSIE 7\.0)|(MSIE 8\.0)/i),
         thumbMargin = 5, // 图片缩略图的间隔
         thumbBorder = 3, // 图片缩略图边框厚度
         sideMargin = 40, // 图片显示区两侧的留白
         imageViewers = [], // imageViewer对象实例数组
         optionsCache, // 全局缓存options
-        bodyMarginLeft = 8, // body的margin-left
+        bodyMarginLeft = 0, // body的margin-left
         slideTimer, // 全局计时器
         isBtnHovered = false, // 上一页、下一页按钮是否处于鼠标悬停状态
         dequeue = function ($elem) { // 立即执行当前触发的动画，以避免动画队列延迟
@@ -46,11 +47,15 @@
                 if(this === imageViewers[idx]) spliceIndex = idx;
             }
 
-            return imageViewers.splice(spliceIndex, 1);;
+            return imageViewers.splice(spliceIndex, 1);
         };
         // 添加图片
         this.addImg = function () {
             imageSlider.addImg.apply(imageSlider, arguments);
+        };
+        // 跳转到索引为index的图片
+        this.setIndex = function (index) {
+            imageSlider.setIndex.call(imageSlider, index);
         };
     };
     /**
@@ -98,8 +103,11 @@
             _t.$elem.addClass('iv-wrapper');
             _t.$elem.append(_t.createContainer(width, height));
             _t.$elem.append(_t.createNavi(_t.album, width, thumbWidth));
-            _t.setIndex(_t.currentIndex);
+            _t.$elem.append(_t.createMask());
+            _t.bindKeydownEvents();
             _t.$elem.show();
+            _t.$wrapper.show();
+            _t.setIndex(_t.currentIndex);
         },
         /**
          * 初始化对象参数
@@ -173,8 +181,8 @@
         createContainer: function (width, height) {
             var _t = this,
                 $container = $('<div/>'),
-                $next = $('<div/>').append('<span />'), // 下一张
-                $prev = $('<div/>').append('<span />'), // 上一张
+                $next = $('<a href="javascript:void(0);"/>'), // 下一张
+                $prev = $('<a href="javascript:void(0);"/>'), // 上一张
                 $img = $('<img />'),
                 $content = $('<div/>').append($img);
             // 添加class和默认样式
@@ -204,6 +212,18 @@
             return $container;
         },
         /**
+         * 创建遮罩
+         * @return {[type]} 遮罩层jQuery元素
+         */
+        createMask: function () {
+            var _t = this,
+                $mask = $('<div/>'); // 遮罩
+
+            $mask.addClass('iv-mask');
+
+            return $mask;
+        },
+        /**
          * 翻页事件绑定
          * @param  {[type]} $prev 上一张按钮
          * @param  {[type]} $next 下一张按钮
@@ -212,7 +232,7 @@
             var _t = this;
             // 上一张
             $prev.on('click', function (event) {
-                _t.switchImage(_t.currentIndex - 1);
+                _t.setIndex(_t.currentIndex - 1);
             }).on('mouseover', function (event) {
                 $(this).addClass('hover');
             }).on('mouseout', function (event) {
@@ -220,7 +240,7 @@
             });
             // 下一张
             $next.on('click', function (event) {
-                _t.switchImage(_t.currentIndex + 1);
+                _t.setIndex(_t.currentIndex + 1);
             }).on('mouseover', function (event) {
                 $(this).addClass('hover');
             }).on('mouseout', function (event) {
@@ -237,15 +257,15 @@
             var _t = this,
                 $navi = $('<div/>'),
                 $naviWrapper = $('<div/>'),
-                $naviPrev = $('<div/>'), // 上一页
-                $naviNext = $('<div/>'), // 下一页
+                $naviPrev = $('<a href="javascript:void(0);"/>'), // 上一页
+                $naviNext = $('<a href="javascript:void(0);"/>'), // 下一页
                 $ul = $('<ul/>'),
                 ulWidth = ( _t.thumbItemWidth) * album.length;
             // 添加class和默认样式
             $navi.addClass('iv-navi');
             $naviWrapper.addClass('iv-navi-wrapper');
-            $naviPrev.addClass('iv-thumb-indicator prev');
-            $naviNext.addClass('iv-thumb-indicator next');
+            $naviPrev.addClass('iv-thumb-indicator prev').attr('title', '上一页');
+            $naviNext.addClass('iv-thumb-indicator next').attr('title', '下一页');;
             $ul.addClass('iv-thumb-list');
             $naviWrapper.width(width);
             $navi.width(width + sideMargin * 2);
@@ -298,6 +318,7 @@
             thumbItem.className = 'iv-thumb-item';
             thumbImg.src = src;
             thumbImg.style.opacity = opacity;
+            thumbImg.style.filter = 'alpha(opacity=' + opacity * 100 + ')'; 
 
             thumbItem.appendChild(thumbImg);
 
@@ -311,28 +332,58 @@
             var _t = this,
                 thumbWidth = _t.thumbWidth,
                 fadeTime = _t.transitionSetting.thumbFadeTime,
-                opacity = _t.transitionSetting.thumbOpacity;
+                opacity = _t.transitionSetting.thumbOpacity,
+                slideSpeed = _t.transitionSetting.slideSpeed,
+                slideTime = _t.thumbWidth / slideSpeed * 1000,
+                canSlide = true,
+                enableInterval = true,
+                slideTimer;
             // 缩略图鼠标悬停、鼠标移开事件
             // #TODO: delegate性能指标
             $ul.on('mousemove', function (event) {
 
                 var ulElem = $ul.get(0),
-                    offsetParent = ulElem.offsetParent,
-                    offsetLeft = ulElem.offsetLeft,
+                    thumbSlide = _t.transitionSetting.thumbSilde,
+                    $naviWrapper = $ul.closest('.iv-navi-wrapper'),
+                    offsetParent = $naviWrapper.get(0).offsetParent,
+                    offsetLeft = $naviWrapper.offset().left,
                     index = _t.currentIndex,
                     XToNavi, // 鼠标相对的导航区（可视区域）的X坐标
-                    XToUl; // 鼠标相对于缩略图列表UL的X坐标
-
-                while(offsetParent = offsetParent.offsetParent) {
-                    offsetLeft += offsetParent.offsetLeft;
-                }
+                    XToUl, // 鼠标相对于缩略图列表UL的X坐标
+                    tick = 0;
 
                 XToNavi = event.pageX - offsetLeft - bodyMarginLeft;
-                XToUl = XToNavi + ulElem.scrollLeft;
+                XToUl = XToNavi + _t.thumbOffset;
                 index = Math.floor(XToUl / _t.thumbItemWidth);
-                if(index === _t.currentIndex) return false;
-                console.log(index);
-                _t.setIndex(index);
+
+                if(thumbSlide === 'mousemove') {
+
+                    if(index === _t.currentIndex) return false;
+
+                    if(enableInterval) {
+                        slideTimer = setInterval(function () {
+
+                            if(tick >= 5) {
+                                clearInterval(slideTimer);
+                                enableInterval = true;
+                            } else {
+                                tick++;
+                            }
+                            
+                            if(canSlide === false) canSlide = true;
+
+                        }, slideTime * 2);
+                        enableInterval = false;
+                    }
+
+                    _t.setIndex(canSlide ? index : -1);
+                    canSlide = canSlide && false;
+                } else if (thumbSlide === 'mouseover') {
+
+                    if(index === $ul.find('.hover').index()) return false;
+                    _t.transformImage(index); // 切换预览图
+                    _t.highlightThumb(index, 'hover'); // 高亮当前选中缩略图
+                }
 
             });
             // 缩略图鼠标点击事件
@@ -341,6 +392,7 @@
                     index = $t.index();
 
                 dequeue($t.find('img'));
+                dequeue(_t.$ul);
                 _t.setIndex(index);
             });
         },
@@ -478,7 +530,6 @@
          * @param  {[type]} index 当前图片的索引
          */
         centerThumb: function (index) {
-
             var _t = this,
                 thumbWidth = _t.thumbWidth,
                 $naviWraper = _t.$navi.find('.iv-navi-wrapper'),
@@ -519,23 +570,72 @@
         transformImage: function (index) {
             var _t = this,
                 fadeTime = _t.transitionSetting.fadeTime,
-                opacity = _t.transitionSetting.opacity;
+                opacity = _t.transitionSetting.opacity,
+                width = _t.$img.closest('.iv-content').width(),
+                height = _t.$img.closest('.iv-content').height(),
+                imgWidth,
+                imgHeight;
 
             dequeue(_t.$img);
+
             _t.$img.fadeTo(fadeTime, opacity, function() {
                 _t.$img[0].src = _t.album[index];
+                
+                
             }).fadeTo(fadeTime, 1);
+
+            _t.$img.on('load', function () {
+
+                imgWidth = _t.$img.width();
+                imgHeight = _t.$img.height();
+                _t.$img.css({
+                    left: (width - imgWidth) / 2,
+                    top: (height - imgHeight) / 2
+                });
+            });
+        },
+        /**
+         * 绑定按键事件
+         * @return {[type]} [description]
+         */
+        bindKeydownEvents: function () {
+            var _t = this;
+
+            $(document).on("keydown", function (event) {
+
+                switch(event.keyCode){
+                    case 87://W
+                        _t.setIndex(_t.currentIndex - 1);
+                        break;
+                    case 69://E
+                        _t.setIndex(_t.currentIndex + 1);
+                        break;
+                    case 67://C
+                        break;
+                }
+
+            });
         }
     };
     /* ImageUtil Class Definition*/
-    var ImageTool = function(wrapper, img, options) {
+    var ImageTool = function(container, img, options) {
 
         if(!options.enableToolbar) return false;
 
-        this.$wrapper = $(wrapper);
+        this.$container = $(container);
         this.$img = $(img);
         this.$toolbar = null;
+        this.$dragMask = null;
+        this.imgWidth = this.$img.width();
+        this.imgHeight = this.$img.height();
+        this.zoomImgWidth = 0;
+        this.zoomImgHeight = 0;
         this.rotate = 0;
+        this.isDrag = false;
+        this.isMoved = false;
+        this.isZoom = false;
+        this.dragLeft = 0;
+        this.dragTop = 0;
         this.init(options);
 
     };
@@ -550,10 +650,26 @@
                 img = _t.$img.get(0);
 
             _t.$img.addClass('iv-image-enhanced');
-            _t.$wrapper.append(_t.createToolbar());
-            _t.bindKeydownEvents();
-            _t.imgReady(img);
+            _t.$container.append(_t.createToolbar());
+            _t.$dragMask = _t.createDragMask();
+            _t.$dragMask.insertAfter(_t.$container);
 
+            _t.bindKeydownEvents();
+            _t.bindDragEvents();
+            _t.imgReady(_t.$img);
+            _t.setRotateAnim();
+
+        },
+
+        createDragMask: function () {
+
+            var _t = this,
+                $dragMask = $('<div/>');
+
+            $dragMask.addClass('iv-drag-mask');
+            $dragMask.hide();
+
+            return $dragMask;
         },
 
         createToolbar: function () {
@@ -574,19 +690,26 @@
             $zoomInBtn.addClass('iv-zoom-in-btn').attr("title","原始大小");
             $zoomOutBtn.addClass('iv-zoom-out-btn').attr("title","适应窗口");
             $closeBtn.addClass('iv-close-btn').attr("title","关闭");
-
-            // 按钮事件
+            // 逆时针旋转90°
             $rotateLeftBtn.on('click', function (event) {
                 _t.rotateLeft();
             });
-
+            // 顺时针旋转90°
             $rotateRightBtn.on('click', function (event) {
                 _t.rotateRight();
             });
-
-            $zoomInBtn.on('click', _t.zoomIn);
-            $zoomOutBtn.on('click', _t.zoomOut);
-            $closeBtn.on('click', _t.closeDialog);
+            // 放大
+            $zoomInBtn.on('click', function (event) {
+                _t.zoomIn();
+            });
+            // 缩小
+            $zoomOutBtn.on('click', function (event) {
+                _t.zoomOut();
+            });
+            // 关闭窗口
+            $closeBtn.on('click', function (event) {
+                _t.closeDialog();
+            });
             
             $toolbarCon.append($rotateLeftBtn).append($rotateRightBtn);
             $toolbarCon.append($zoomInBtn).append($zoomOutBtn);
@@ -595,46 +718,6 @@
 
             _t.$toolbar = $toolbar;
             return $toolbar;
-        },
-
-        imgReady: function (img) {
-
-            img.onload = function(){
-
-                imgObjWidth = img.width;
-                imgObjHeight = img.height;
-                dragMaxLeft = imgObjWidth - width;
-                dragMaxTop = imgObjHeight - height;
-                dragGap = (imgObjWidth-imgObjHeight)/2;
-                if(width/height > imgObjWidth/imgObjHeight){
-                    imgZoomWidth = parseInt(imgObjWidth/imgObjHeight*height);
-                    imgZoomHeight = height;
-                }else{
-                    imgZoomWidth = width;
-                    imgZoomHeight = parseInt(imgObjHeight/imgObjWidth*width);
-                }
-
-                imgObj
-                    .attr("width",imgZoomWidth).attr("height",imgZoomHeight)
-                    .css({
-                        left:(width-imgZoomWidth)/2,
-                        top:(height-imgZoomHeight)/2,
-                        cursor:"move"
-                    });
-                dragTop = (height-imgZoomHeight)/2;
-                dragLeft = (width-imgZoomWidth)/2;  
-                if(isIE){
-                    imgObj.css("filter","progid:DXImageTransform.Microsoft.BasicImage(rotation=0)");
-                }else{
-                    imgObj
-                        .css("-webkit-transform","rotate(0deg)")
-                        .css("-moz-transform","rotate(0deg)")
-                        .css("-o-transform","rotate(0deg)")
-                        .css("transform","rotate(0deg)");
-                }
-            }
-            img.src=src;
-
         },
 
         bindKeydownEvents: function () {
@@ -653,7 +736,7 @@
                             _t.rotateRight();
                             break;
                         case 68://d
-                            if(zoomIn){
+                            if(_t.isZoom){
                                 _t.zoomOut();
                             }else{
                                 _t.zoomIn();
@@ -672,28 +755,29 @@
 
             var _t = this,
                 $img = _t.$img,
-                width = _t.$img.closet('.container').width(),
-                height = _t.$img.closet('.container').width(),
-                imgZoomHeight = $img.height(),
-                imgZoomWidth = $img.width();
+                img = $img.get(0),
+                imgWidth = _t.$img.width(),
+                imgHeight = _t.$img.height(),
+                containerHeight = $img.closest('.iv-content').height(),
+                containerWidth = $img.closest('.iv-content').width();
 
             if(isIE){
-                $img.css('filter', 'progid:DXImageTransform.Microsoft.BasicImage(rotation=' + (rotate < 0 ? 4 - (-rotate % 4) : rotate % 4) + ')');
                 
-                if(!zoomIn){
-
-                    if(_t.rotate%2 == 1){
-                        $img.css({
-                            left: (width - imgZoomHeight) / 2,
-                            top: (height - imgZoomWidth) / 2
-                        });
-                    } else {
-                        $img.css({
-                            left: (width - imgZoomWidth) / 2,
-                            top: (height - imgZoomHeight) / 2
-                        });
-                    }
+                if(_t.rotate % 2 == 1 || _t.rotate % 2 == -1){
+                    $img.css({
+                        'top': (containerHeight - imgWidth) / 2 + 'px',
+                        'left': (containerWidth - imgHeight) / 2 + 'px'
+                    });
+                } else {
+                    $img.css({
+                        'left': (containerWidth - imgHeight) / 2 + 'px',
+                        'top': (containerHeight - imgWidth) / 2 + 'px'
+                    });
                 }
+
+                $img.css('filter', 'progid:DXImageTransform.Microsoft.BasicImage(rotation=' + (_t.rotate < 0 ? 4 - (-_t.rotate % 4) : _t.rotate % 4) + ')');
+
+                console.log($img.css('left') + '  ' + $img.css('top'));
 
             } else {
                 $img.css('-webkit-transform', 'rotate(' + _t.rotate * 90 + 'deg)')
@@ -724,15 +808,150 @@
             return false;
         },
 
-        zoomIn: function () {
+        bindDragEvents: function () {
 
+            var _t = this,
+                $img = _t.$img,
+                img = _t.$img.get(0),
+                dragX,
+                dragY,
+                endDrag = function () {
+                    _t.isMoved = false;
+                    _t.isDrag = false;
+                    _t.dragLeft = parseInt($img.css("left"));
+                    _t.dragTop = parseInt($img.css("top"));
+                    _t.$dragMask.hide();
+                    $img.removeClass('iv-in-drag');
+                };
+
+            $img.on("mousedown",function(event){
+
+                if(event.target === img){
+                    dragX = event.pageX - _t.dragLeft;
+                    dragY = event.pageY - _t.dragTop;
+                    _t.isDrag = true;
+                }
+
+                return false;
+            }).on("mousemove",function(event){
+
+                if(!_t.isDrag) return false;
+
+                if(event.target === img){
+                    var _x = event.pageX - dragX,
+                        _y = event.pageY - dragY;
+
+                    $img.addClass('iv-in-drag');
+                    _t.$dragMask.show();
+                    img.style.left = _x + "px";
+                    img.style.top = _y + "px";
+                    _t.isMoved = true;
+                }
+
+                event.stopPropagation();
+                return false;
+            }).on("mouseup",function(){
+
+                if(!_t.isDrag) return false;
+
+                if(!_t.isMoved) _t.closeDialog();
+
+                endDrag();
+                return false;
+            });
+
+            $(document).on('mousemove', function (event) {
+
+                if(event.target !== img) {
+                    _t.isDrag = false;
+                } else {
+                    return false;
+                }
+                endDrag();
+                return false;
+
+            });
+
+        },
+
+        zoomIn: function () {
+            var _t = this,
+                img = _t.$img.get(0),
+                src = img.src,
+                left = parseInt(img.style.left),
+                top = parseInt(img.style.top),
+                _left,
+                _top;
+
+            if(_t.isZoom) return false;
+
+            _t.imgWidth = _t.$img.width();
+            _t.imgHeight = _t.$img.height();
+            _t.$img.addClass('iv-zoom-in');
+            _t.zoomImgWidth = _t.$img.width();
+            _t.zoomImgHeight = _t.$img.height();
+
+            _left = (_t.zoomImgWidth - _t.imgWidth) / 2;
+            _top = (_t.zoomImgHeight - _t.imgHeight) / 2;
+
+            img.style.left = left - _left + 'px';
+            img.style.top = top - _top + 'px';
+
+            _t.dragLeft = left - _left;
+            _t.dragTop = top - _top;
+
+            _t.isZoom = true;
         },
 
         zoomOut: function () {
+            var _t = this,
+                img = _t.$img.get(0),
+                src = img.src,
+                left = parseInt(img.style.left),
+                top = parseInt(img.style.top),
+                _left,
+                _top;
 
+            if(!_t.isZoom) return false;
+            
+            _t.zoomImgWidth = _t.$img.width();
+            _t.zoomImgHeight = _t.$img.height();
+            _t.$img.removeClass('iv-zoom-in');
+            _t.imgWidth = _t.$img.width();
+            _t.imgHeight = _t.$img.height();
+
+            _left = (_t.zoomImgWidth - _t.imgWidth) / 2;
+            _top = (_t.zoomImgHeight - _t.imgHeight) / 2;
+
+            img.style.left = left + _left + 'px';
+            img.style.top = top + _top + 'px';
+
+            _t.dragLeft = left + _left;
+            _t.dragTop = top + _top;
+
+            _t.isZoom = false;
+        },
+
+        imgReady: function ($img) {
+            var _t = this,
+                img = $img.get(0),
+                width = $img.closest('.iv-content').width(),
+                height = $img.closest('.iv-content').height(),
+                imgWidth = $img.width(),
+                imgHeight = $img.height();
+
+            $img.on('load', function () {
+                _t.$img.removeClass('iv-zoom-in'); // #TODO: 是否要移除iv-zoom-in CLASS
+                _t.isZoom = false;
+                _t.rotate = 0;
+                _t.setRotateAnim();
+            });
         },
 
         closeDialog: function () {
+            var _t = this;
+
+            _t.$container.closest('.iv-wrapper').hide();
 
         }
 
@@ -772,8 +991,7 @@
 
     $.fn.imageViewer.defaults = {
 
-        enableToolbar: false,
-        slideSwitch: true,
+        enableToolbar: true,
         /* width, height, thumbHeight, thumbWidth变更时需重新编译scss文件，或手动指定样式 */
         width: 600,
         height: 500,
@@ -788,12 +1006,12 @@
 
             enableBtnHoverSwitch: false, // true|false 是否在鼠标悬停时切换图片（悬停结束后切换回原图片）
             enableBtnHoverSlide: true, // true|false 是否在“前进”、“后退”按钮悬停时滚动图片
-            thumbSilde: 'none', // 'mouseover'|'mousemove'|'none' 
+            thumbSilde: 'mousemove', // 'mouseover'|'mousemove'|'none' 
             slideSpeed: 1000, // 滚动速度：pixels/s
             opacity: 0.9,
             fadeTime: 100, // ms
             thumbOpacity: 0.5,
-            thumbFadeTime: 200, // ms
+            thumbFadeTime: 100, // ms
             thumbEasing: 'linear'
         }
     };
