@@ -6,14 +6,18 @@
 
     var isIE = !+[1,],
         thumbMargin = 5, // 图片缩略图的间隔
+        thumbBorder = 3, // 图片缩略图边框厚度
         sideMargin = 40, // 图片显示区两侧的留白
+        imageViewers = [], // imageViewer对象实例数组
+        optionsCache, // 全局缓存options
+        bodyMarginLeft = 8, // body的margin-left
+        slideTimer, // 全局计时器
+        isBtnHovered = false, // 上一页、下一页按钮是否处于鼠标悬停状态
         dequeue = function ($elem) { // 立即执行当前触发的动画，以避免动画队列延迟
 
             if($elem.is(':animated')) $elem.dequeue();
 
-        },
-        imageViewers = [],
-        optionsCache; // 全局缓存options
+        };
     /**
      * ImageViewer类定义，ImageViewer类封装并暴露了ImageSlider和ImageTool类的方法
      * @param {[type]} elem    imageViewer元素
@@ -21,31 +25,30 @@
      * @param {[type]} options 控件选项
      */
     var ImageViewer = function (elem, album, options) {
-
         var imageSlider = new ImageSlider(elem, album, options);
             wrapper = imageSlider.$container.get(0); // 外层包裹元素
             img = imageSlider.$img.get(0); // 图片
             imageTool = new ImageTool(wrapper, img, options);
 
         optionsCache = options;
-        if(arguments.length === 0) return undefined;
-        
+        // 重构方法
         this.refactor = function () {
             imageSlider.refactor.apply(imageSlider, arguments); // 重构方法
             return this;
         };
+        // 销毁方法
         this.destroy = function () {
             var spliceIndex = imageViewers.length;
-
+            
             imageSlider.destroy.call(imageSlider);
             $(elem).removeData('viewer');
             for(var idx = 0, len = imageViewers.length; idx < len; idx++) {
                 if(this === imageViewers[idx]) spliceIndex = idx;
             }
 
-            imageViewers[spliceIndex] = undefined;
             return imageViewers.splice(spliceIndex, 1);;
         };
+        // 添加图片
         this.addImg = function () {
             imageSlider.addImg.apply(imageSlider, arguments);
         };
@@ -62,6 +65,7 @@
         this.maxIndex = album.length - 1; // 显示图片的最大索引
         this.thumbNumber = Math.floor(options.width / ( options.thumbWidth + thumbMargin)); // 每页的缩略图数，翻页的图片数 
         this.thumbWidth = options.thumbWidth;
+        this.thumbItemWidth = this.thumbWidth + thumbMargin + thumbBorder * 2;
         this.$elem = $(elem);
         this.$wrapper = options.wrapper === false ? $('body') : $(options.wrapper); // 图片控件包裹元素
         this.$container = null;
@@ -106,8 +110,9 @@
 
             _t.currentIndex = options.currentIndex; // 当前显示图片的索引
             _t.maxIndex = _t.album.length - 1; // 显示图片的最大索引
-            _t.thumbNumber = Math.floor(options.width / ( options.thumbWidth + thumbMargin)); // 每页的缩略图数，翻页的图片数 
+            _t.thumbNumber = Math.floor(options.width / ( _t.thumbItemWidth)); // 每页的缩略图数，翻页的图片数 
             _t.thumbWidth = options.thumbWidth;
+            _t.thumbItemWidth = options.thumbWidth + thumbMargin + thumbBorder * 2;
             _t.$wrapper = options.wrapper === false ? $('body') : $(options.wrapper); // 图片控件包裹元素
             _t.thumbOffset = 0;
             _t.transitionSetting = options.transitionSetting; // 动画设置参数
@@ -137,9 +142,17 @@
         },
 
         addImg: function (src) {
-            var _t = this;
+            var _t = this,
+                options = optionsCache,
+                newThumbItem;
 
-            if(typeof src === 'string') _t.thumb.push(src);
+            if(typeof src === 'string') _t.album.push(src);
+
+            newThumbItem = _t.createThumbItem(src);
+            _t.maxIndex++;
+            _t.list.push(newThumbItem);
+            _t.$ul.append($(newThumbItem));
+            _t.$ul.width(_t.$ul.width() + _t.thumbItemWidth);
         },
         /**
          * 销毁imageSlider对象
@@ -162,10 +175,11 @@
                 $container = $('<div/>'),
                 $next = $('<div/>').append('<span />'), // 下一张
                 $prev = $('<div/>').append('<span />'), // 上一张
-                $img = $('<img />'), 
+                $img = $('<img />'),
                 $content = $('<div/>').append($img);
             // 添加class和默认样式
             $container.addClass('iv-container');
+            $img.addClass('iv-image');
             $next.addClass('iv-indicator next').attr('title', '下一张');
             $prev.addClass('iv-indicator prev').attr('title', '上一张');
             $container.width(width + sideMargin * 2);
@@ -223,10 +237,10 @@
             var _t = this,
                 $navi = $('<div/>'),
                 $naviWrapper = $('<div/>'),
-                $naviPrev = $('<div/>').append('<span/>'), // 上一页
-                $naviNext = $('<div/>').append('<span/>'), // 下一页
+                $naviPrev = $('<div/>'), // 上一页
+                $naviNext = $('<div/>'), // 下一页
                 $ul = $('<ul/>'),
-                ulWidth = ( thumbWidth + thumbMargin ) * album.length;
+                ulWidth = ( _t.thumbItemWidth) * album.length;
             // 添加class和默认样式
             $navi.addClass('iv-navi');
             $naviWrapper.addClass('iv-navi-wrapper');
@@ -248,7 +262,6 @@
             _t.$ul = $ul;
 
             return $navi;
-
         },
         /**
          * 创建缩略图列表
@@ -256,7 +269,6 @@
          * @return {[type]}       缩略图列表jQuery元素
          */
         createThumbList: function (album) {
-
             var _t = this,
                 list = [],
                 thumbImg = [],
@@ -264,20 +276,32 @@
                 opacity = _t.transitionSetting.thumbOpacity;
 
             $.each(album, function (idx, item) {
-                thumbImg[idx] = document.createElement('img');
-                list[idx] = document.createElement('li');
-
-                list[idx].className = 'iv-thumb-item';
-                thumbImg[idx].src = album[idx];
-                thumbImg[idx].style.opacity = opacity;
-
-                list[idx].appendChild(thumbImg[idx]);
+                list[idx] = _t.createThumbItem(album[idx]);
                 frag.appendChild(list[idx]);
             });
 
             _t.list = list;
 
-            return $(frag.children);
+            return $(frag.childNodes);
+        },
+        /**
+         * 创建单个缩略图及外层LI
+         * @param  {[type]} src 图片src地址
+         * @return {[type]}     HTMLLIElement
+         */
+        createThumbItem: function (src) {
+            var _t = this,
+                opacity = _t.transitionSetting.thumbOpacity,
+                thumbImg = document.createElement('img'),
+                thumbItem = document.createElement('li');
+
+            thumbItem.className = 'iv-thumb-item';
+            thumbImg.src = src;
+            thumbImg.style.opacity = opacity;
+
+            thumbItem.appendChild(thumbImg);
+
+            return thumbItem;
         },
         /**
          * 缩略图事件绑定
@@ -288,27 +312,31 @@
                 thumbWidth = _t.thumbWidth,
                 fadeTime = _t.transitionSetting.thumbFadeTime,
                 opacity = _t.transitionSetting.thumbOpacity;
-            // 缩略图鼠标悬停、鼠标移开、鼠标点击事件
-            $ul.find('.iv-thumb-item').on('mouseover', function (event) {
-                var $t = $(this),
-                    index = $t.index();
+            // 缩略图鼠标悬停、鼠标移开事件
+            // #TODO: delegate性能指标
+            $ul.on('mousemove', function (event) {
 
-                dequeue($t.find('img'));
-                dequeue(_t.$img);
-                $t.not('.selected').find('img').fadeTo(fadeTime, 1, function () {
-                    _t.transformImage(index);
-                });
-                $t.addClass('hover');
-            }).on('mouseout', function (event) {
-                var $t = $(this),
-                    index = _t.$ul.find('.selected').index();
-                event.stopPropagation(); // 阻止事件冒泡到外层ul上
-                dequeue(_t.$img);
-                $t.not('.selected').find('img').fadeTo(fadeTime, opacity, function () {
-                    _t.transformImage(index);
-                });
-                $t.removeClass('hover');
-            }).on('click', function (event) {
+                var ulElem = $ul.get(0),
+                    offsetParent = ulElem.offsetParent,
+                    offsetLeft = ulElem.offsetLeft,
+                    index = _t.currentIndex,
+                    XToNavi, // 鼠标相对的导航区（可视区域）的X坐标
+                    XToUl; // 鼠标相对于缩略图列表UL的X坐标
+
+                while(offsetParent = offsetParent.offsetParent) {
+                    offsetLeft += offsetParent.offsetLeft;
+                }
+
+                XToNavi = event.pageX - offsetLeft - bodyMarginLeft;
+                XToUl = XToNavi + ulElem.scrollLeft;
+                index = Math.floor(XToUl / _t.thumbItemWidth);
+                if(index === _t.currentIndex) return false;
+                console.log(index);
+                _t.setIndex(index);
+
+            });
+            // 缩略图鼠标点击事件
+            $ul.delegate('.iv-thumb-item', 'click', function (event) {
                 var $t = $(this),
                     index = $t.index();
 
@@ -324,86 +352,132 @@
             var _t = this,
                 isHovered = false, // 鼠标是否悬停在翻页按钮上
                 slideTimer, // 滑动动画计时器
-                enableHoverSlide = _t.transitionSetting.enableHoverSlide;
+                enableBtnHoverSlide = _t.transitionSetting.enableBtnHoverSlide,
+                enableBtnHoverSwitch = _t.transitionSetting.enableBtnHoverSwitch;
             // 翻页按钮鼠标悬停、鼠标移开、点击事件
             $navi.find('.prev,.next').on('mouseover', function (event) {
                 var $t = $(this),
                     thumbWidth = _t.thumbWidth,
+                    slideSpeed = _t.transitionSetting.slideSpeed,
+                    slideTime = _t.thumbWidth / slideSpeed * 1000,
+                    currentIndex = _t.currentIndex,
                     isForword; // 是否向前滑动
                 
                 $t.addClass('hover');
 
-                if (!enableHoverSlide) return false;
-                    
-                isHovered = true;
+                if (!enableBtnHoverSlide) return false;
+                
+                isBtnHovered = true;
                 /* 如果鼠标悬停在CLASS为prev的元素，说明是向前滑动 */
                 isForword = $t[0].className.match('prev') ? false : true;
-                /* 开始计时以持续滑动，每20ms检测鼠标是否移开，若移开，则停止滑动 */
-                slideTimer = setInterval(function () {
-                    var marginLeft = $t.css('margin-left');
-
-                    if(isHovered === false) {
-                        clearInterval(slideTimer);
-                    } else if (!_t.$ul.is(':animated')){
-                        var offset = _t.thumbOffset + (isForword ? thumbWidth : -thumbWidth);
-                        _t.scrollThumb(offset, 'linear'); // 线性速度滑动
-                    }
-                    
-                } ,20);
+                /* 开始计时以持续滑动，每slideTime时间检测鼠标是否移开，若移开，则停止滑动 */
+                slideTimer = _t.slideThumb(isForword);
             }).on('mouseout', function (event) {
                 var $t = $(this);
 
                 $t.removeClass('hover');
 
-                if (!enableHoverSlide) return false;
+                if (!enableBtnHoverSlide) return false;
 
                 dequeue(_t.$ul);
-                isHovered = false; // 鼠标移开时，将isHovered置为false
+                isBtnHovered = false; // 鼠标移开时，将isHovered置为false
                 clearInterval(slideTimer);
+                _t.setIndex(_t.currentIndex); // 鼠标移开时，回到当前currentIndex
+                _t.previewIndex(_t.currentIndex);
             }).on('click', function (event) {
                 var $t = $(this),
                     isForword = $t[0].className.match('prev') ? false : true,
                     index = _t.currentIndex + (isForword ? _t.thumbNumber : (-_t.thumbNumber));
+
+                if(enableBtnHoverSwitch) return false;
                 // 向前或向后翻过thumbNumber张图片
                 index = index < 0 ? 0 : (index > _t.maxIndex ? _t.maxIndex : index);
-
                 _t.setIndex(index);
             });
         },
         /**
-         * 设置图片索引
+         * 滑动缩略图列表
+         * @param  {Boolean} isForword 是否为前进方向:true为向前
+         * @return {[type]}            setInterval计时器
+         */
+        slideThumb: function (isForword) {
+            var _t = this,
+                index = _t.currentIndex,
+                thumbItemWidth = _t.thumbItemWidth,
+                slideSpeed = _t.transitionSetting.slideSpeed,
+                slideTime = _t.thumbWidth / slideSpeed * 1000,
+                enableBtnHoverSlide = _t.transitionSetting.enableBtnHoverSlide,
+                enableBtnHoverSwitch = _t.transitionSetting.enableBtnHoverSwitch;
+            /* 开始计时以持续滑动，每slideTime时间检测鼠标是否移开，若移开，则停止滑动 */
+            return setInterval(function () {
+                var marginLeft = _t.thumbOffset;
+
+                if(isBtnHovered === false) {
+                    clearInterval(slideTimer);
+                } else if (!_t.$ul.is(':animated')){
+                    var offset = _t.thumbOffset + (isForword ? thumbItemWidth : -thumbItemWidth);
+
+                    if(enableBtnHoverSwitch) {
+                        /* 鼠标悬停时切换图片 */
+                        _t.setIndex(_t.currentIndex + (isForword ? 1 : -1));
+                    } else {
+                        /* 鼠标悬停时预览图片，鼠标移开时回到当前选中图片 */
+                        _t.previewIndex( index += (isForword ? 1 : -1));
+                    }
+                }
+
+            } ,slideTime);
+        },
+        /**
+         * 设置图片
          * @param {[type]} index 图片的索引
          */
         setIndex: function (index) {
             var _t = this;
 
+            if(index < 0 || index > _t.maxIndex) return false;
+
             _t.currentIndex = index; // 设置当前索引
             _t.transformImage(index); // 切换预览图
-            _t.highlightThumb(index); // 高亮当前选中缩略图
-            _t.centerSelectedThumb(index); // 居中当前选中缩略图
+            _t.highlightThumb(index, 'selected'); // 高亮当前选中缩略图
+            _t.centerThumb(index); // 居中当前选中缩略图
         },
         /**
-         * 高亮当前选中的缩略图
-         * @param  {[type]} index 当前图片的索引
+         * 预览图片
+         * @param  {[type]} index 图片的索引
          */
-        highlightThumb: function (index) {
+        previewIndex: function (index) {
+            var _t = this;
 
+            if(index < 0 || index > _t.maxIndex) return false;
+
+            _t.transformImage(index); // 切换预览图
+            _t.highlightThumb(index, 'hover'); // 高亮当前选中缩略图
+            // _t.scrollThumb(_t.thumbItemWidth, 'linear');
+            _t.centerThumb(index);
+        },
+        /**
+         * 高亮缩略图并添加相应CLASS NAME
+         * @param  {[type]} index 图片的索引
+         */
+        highlightThumb: function (index, className) {
             var _t = this,
-                $prevSelected = null,
-                $currSelected = null,
+                $prevImg = null,
+                $currImg = null,
                 fadeTime = _t.transitionSetting.thumbFadeTime,
                 opacity = _t.transitionSetting.thumbOpacity;
 
-            $prevSelected = _t.$navi.find('.selected').removeClass('selected'); // 去掉之前选中缩略图LI的selected CLASS
-            $prevSelected.find('img').fadeTo(fadeTime, opacity); // 缩略图褪色
-            $currSelected = $(_t.list[index]).addClass('selected'); // 当前选中缩略图添加selected CLASS
-            $currSelected.find('img').fadeTo(fadeTime, 1); // 高亮当前选中图片
+            dequeue(_t.$ul.find('img'));
+            $prevImg = _t.$ul.find('.' + className).removeClass(className); // 去掉之前选中缩略图LI的selected CLASS
+            $prevImg.find('img').fadeTo(fadeTime, opacity); // 缩略图褪色
+            $currImg = $(_t.list[index]).addClass(className); // 当前选中缩略图添加selected CLASS
+            $currImg.find('img').fadeTo(fadeTime, 1); // 高亮当前选中图片
         },
         /**
-         * 将当前选中的缩略图居中
+         * 将当前的缩略图居中
          * @param  {[type]} index 当前图片的索引
          */
-        centerSelectedThumb: function (index) {
+        centerThumb: function (index) {
 
             var _t = this,
                 thumbWidth = _t.thumbWidth,
@@ -412,7 +486,7 @@
                 visibleLeft,
                 marginLeft;
 
-            offsetLeft = (thumbWidth + thumbMargin) * index; // 当前缩略图距离UL左端的距离
+            offsetLeft = (_t.thumbItemWidth) * index; // 当前缩略图距离UL左端的距离
             visibleLeft = ($naviWraper.width() - thumbWidth) / 2; // 当前缩略图居中时距离导航条（可视区域）左端的距离
             marginLeft = offsetLeft - visibleLeft;
             _t.scrollThumb(marginLeft);
@@ -597,10 +671,14 @@
         setRotateAnim: function () {
 
             var _t = this,
-                $img = _t.$img;
+                $img = _t.$img,
+                width = _t.$img.closet('.container').width(),
+                height = _t.$img.closet('.container').width(),
+                imgZoomHeight = $img.height(),
+                imgZoomWidth = $img.width();
 
             if(isIE){
-                $img.css('filter','progid:DXImageTransform.Microsoft.BasicImage(rotation='+(rotate<0?4-(-rotate%4):rotate%4)+')');
+                $img.css('filter', 'progid:DXImageTransform.Microsoft.BasicImage(rotation=' + (rotate < 0 ? 4 - (-rotate % 4) : rotate % 4) + ')');
                 
                 if(!zoomIn){
 
@@ -615,14 +693,13 @@
                             top: (height - imgZoomHeight) / 2
                         });
                     }
-
                 }
 
             } else {
-                $img.css('-webkit-transform', 'rotate('+_t.rotate*90+'deg)')
-                    .css('-moz-transform', 'rotate('+_t.rotate*90+'deg)')
-                    .css('-o-transform', 'rotate('+_t.rotate*90+'deg)')
-                    .css('transform', 'rotate('+_t.rotate*90+'deg)');
+                $img.css('-webkit-transform', 'rotate(' + _t.rotate * 90 + 'deg)')
+                    .css('-moz-transform', 'rotate(' + _t.rotate * 90 + 'deg)')
+                    .css('-o-transform', 'rotate(' + _t.rotate * 90+'deg)')
+                    .css('transform', 'rotate(' + _t.rotate * 90 + 'deg)');
             }
 
         },
@@ -682,25 +759,21 @@
 
             if(!$t.data('viewer')) {
                 $t.data('viewer', imageViewers[len] = new ImageViewer(elem, album, options));
-                newImageViewers[index] = imageViewers[len];
             } else {
                 if(!$t.data('viewer') instanceof ImageViewer) throw new Error('重构错误!');
                 /* 如果某个控件被重构，重新建立它的索引 */
-                refactorImageViewer = $t.data('viewer').refactor(album, options);
-                for(var idx = 0, len = imageViewers.length; idx < len; idx++) {
-                    if(refactorImageViewer === imageViewers[idx]) refactorIndex = idx;
-                }
-                newImageViewers[index] = imageViewers[refactorIndex];
+                $t.data('viewer').refactor(album, options);
             }
 
         });
 
-        return newImageViewers;
+        return imageViewers;
     };
 
     $.fn.imageViewer.defaults = {
 
         enableToolbar: false,
+        slideSwitch: true,
         /* width, height, thumbHeight, thumbWidth变更时需重新编译scss文件，或手动指定样式 */
         width: 600,
         height: 500,
@@ -713,9 +786,10 @@
         loop: true, // true|false
         transitionSetting: {
 
-            enableHoverSwicth: true, // true|false 是否在鼠标悬停时切换图片（悬停结束后切换回原图片）
-            enableHoverSlide: false, // true|false 是否在“前进”、“后退”按钮悬停时滚动图片
-            slideSpeed: 2000, // 滚动速度：pixels/s
+            enableBtnHoverSwitch: false, // true|false 是否在鼠标悬停时切换图片（悬停结束后切换回原图片）
+            enableBtnHoverSlide: true, // true|false 是否在“前进”、“后退”按钮悬停时滚动图片
+            thumbSilde: 'none', // 'mouseover'|'mousemove'|'none' 
+            slideSpeed: 1000, // 滚动速度：pixels/s
             opacity: 0.9,
             fadeTime: 100, // ms
             thumbOpacity: 0.5,

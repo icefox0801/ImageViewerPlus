@@ -31,12 +31,22 @@ $toobarWidth: 300px;
         margin: 0 $margin;
         vertical-align: middle;
         background: url("../images/transp_bg.png");
+        img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+            display: block;
+            margin: 0;
+            border: 0;
+        }
+        img.iv-image 
+        {
+            
+        }
         img.iv-image-enhanced 
         {
-            border:0;
-            position: absolute;
-            left:0;
-            top:0;
             -moz-user-select:none;
             -khtml-user-select:none;
             user-select:none;
@@ -102,20 +112,32 @@ $toobarWidth: 300px;
             float: left;
             width: $thumbWidth;
             height: $thumbHeight;
+            border: 3px solid #414246;
+            border-color: transparent;
             margin-right: $thumbListMargin;
             cursor: pointer;
             background-color: #313131;
+            &.hover
+            {
+                border-color: rgba(80,215,255,0.6);
+            }
+            &.selected
+            {
+                border-color: rgb(80,215,255);
+                & > img
+                {
+                    opacity: 1!important;
+                }
+            }
             img
             {
+                display: block;
+                margin: 0 auto;
                 max-width: $thumbWidth;
                 max-height: $thumbHeight;
                 _width: $thumbWidth;
                 _height: $thumbHeight;
             }
-        }
-        &.selected > img
-        {
-            opacity: 1!important;
         }
     }
 
@@ -134,8 +156,9 @@ $toobarWidth: 300px;
         &.disabled {
             display: none;
         }
-        span
+        &:after
         {
+            content: ' ';
             width: 19px;
             height: 23px;
             display: block;
@@ -144,7 +167,7 @@ $toobarWidth: 300px;
         &.prev
         {
             left: 0;
-            span
+            &:after
             {
                 background: url('../images/tab.png') 0 -24px;
             }
@@ -152,7 +175,7 @@ $toobarWidth: 300px;
         &.next
         {
             right: 0;
-            span
+            &:after
             {
                 background: url('../images/tab.png') 0 -48px;
             }

@@ -7,11 +7,16 @@
     margin: 0 40px;
     vertical-align: middle;
     background: url("../images/transp_bg.png"); }
-    .iv-container .iv-content img.iv-image-enhanced {
-      border: 0;
+    .iv-container .iv-content img {
       position: absolute;
-      left: 0;
-      top: 0;
+      top: 50%;
+      left: 50%;
+      -webkit-transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%);
+      display: block;
+      margin: 0;
+      border: 0; }
+    .iv-container .iv-content img.iv-image-enhanced {
       -moz-user-select: none;
       -khtml-user-select: none;
       user-select: none; }
@@ -74,16 +79,24 @@
       float: left;
       width: 100px;
       height: 80px;
+      border: 3px solid #414246;
+      border-color: transparent;
       margin-right: 5px;
       cursor: pointer;
       background-color: #313131; }
+      .iv-navi ul.iv-thumb-list > li.hover {
+        border-color: rgba(80, 215, 255, 0.6); }
+      .iv-navi ul.iv-thumb-list > li.selected {
+        border-color: #50d7ff; }
+        .iv-navi ul.iv-thumb-list > li.selected > img {
+          opacity: 1 !important; }
       .iv-navi ul.iv-thumb-list > li img {
+        display: block;
+        margin: 0 auto;
         max-width: 100px;
         max-height: 80px;
         _width: 100px;
         _height: 80px; }
-    .iv-navi ul.iv-thumb-list.selected > img {
-      opacity: 1 !important; }
   .iv-navi .iv-thumb-indicator {
     position: absolute;
     top: 0;
@@ -96,16 +109,17 @@
       opacity: 1; }
     .iv-navi .iv-thumb-indicator.disabled {
       display: none; }
-    .iv-navi .iv-thumb-indicator span {
+    .iv-navi .iv-thumb-indicator:after {
+      content: ' ';
       width: 19px;
       height: 23px;
       display: block;
       margin: 38.5px auto; }
     .iv-navi .iv-thumb-indicator.prev {
       left: 0; }
-      .iv-navi .iv-thumb-indicator.prev span {
+      .iv-navi .iv-thumb-indicator.prev:after {
         background: url("../images/tab.png") 0 -24px; }
     .iv-navi .iv-thumb-indicator.next {
       right: 0; }
-      .iv-navi .iv-thumb-indicator.next span {
+      .iv-navi .iv-thumb-indicator.next:after {
         background: url("../images/tab.png") 0 -48px; }

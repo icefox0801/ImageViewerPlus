@@ -6,14 +6,32 @@ html
         script(type="text/javascript",src="/javascripts/jquery.min.js")
         script(type="text/javascript",src="/javascripts/imageViewerPlus.js")
         script(type="text/javascript").
-            var album = [];
-            for(var idx = 1; idx < 19; idx++) {
-                album[album.length] = '/images/demo/demo' + (idx < 10 ? '0' : '') + idx + '.jpg';
-            }
+            var album = [
+                'http://img3.cache.netease.com/photo/0005/2014-04-04/9P0TOQJP28F90005.jpg',
+                'http://img4.cache.netease.com/photo/0005/2014-04-04/9P0TOQI228F90005.jpg',
+                'http://img3.cache.netease.com/photo/0005/2014-04-04/9P0TOPB928F90005.jpg',
+                'http://img2.cache.netease.com/photo/0005/2014-04-04/9P0TOQ9H28F90005.jpg',
+                'http://img2.cache.netease.com/photo/0005/2014-04-04/9P0TOPUU28F90005.jpg',
+                'http://www.7160.com//uploads/allimg/140404/9-140404235409.jpg',
+                'http://www.7160.com//uploads/allimg/140404/9-140404235415.jpg',
+                'http://www.7160.com//uploads/allimg/140404/9-140404235420.jpg',
+                'http://www.7160.com//uploads/allimg/140404/9-140404235422.jpg',
+                'http://www.7160.com//uploads/allimg/140404/9-140404235425.jpg',
+                'http://img3.cache.netease.com/photo/0005/2014-04-04/9P0TOQJP28F90005.jpg',
+                'http://img4.cache.netease.com/photo/0005/2014-04-04/9P0TOQI228F90005.jpg',
+                'http://img3.cache.netease.com/photo/0005/2014-04-04/9P0TOPB928F90005.jpg',
+                'http://img2.cache.netease.com/photo/0005/2014-04-04/9P0TOQ9H28F90005.jpg',
+                'http://img2.cache.netease.com/photo/0005/2014-04-04/9P0TOPUU28F90005.jpg',
+                'http://www.7160.com//uploads/allimg/140404/9-140404235409.jpg',
+                'http://www.7160.com//uploads/allimg/140404/9-140404235415.jpg',
+                'http://www.7160.com//uploads/allimg/140404/9-140404235420.jpg',
+                'http://www.7160.com//uploads/allimg/140404/9-140404235422.jpg',
+                'http://www.7160.com//uploads/allimg/140404/9-140404235425.jpg'
+            ];
             $(function () {
-                window.ivr1 =  $('#iv1').imageViewer(album);
-                window.ivr =  $('.iv').imageViewer(album);
-                window.ivr2 =  $('#iv2').imageViewer(album);
+                window.ivr =  $('#iv1').imageViewer(album);
+                $('.iv').imageViewer(album);
+                $('#iv2').imageViewer(album);
             });
     body
         block content
