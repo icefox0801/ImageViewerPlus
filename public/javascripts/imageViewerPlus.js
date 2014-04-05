@@ -43,6 +43,7 @@
             
             imageSlider.destroy.call(imageSlider);
             $(elem).removeData('viewer');
+            
             for(var idx = 0, len = imageViewers.length; idx < len; idx++) {
                 if(this === imageViewers[idx]) spliceIndex = idx;
             }
@@ -265,7 +266,7 @@
             $navi.addClass('iv-navi');
             $naviWrapper.addClass('iv-navi-wrapper');
             $naviPrev.addClass('iv-thumb-indicator prev').attr('title', '上一页');
-            $naviNext.addClass('iv-thumb-indicator next').attr('title', '下一页');;
+            $naviNext.addClass('iv-thumb-indicator next').attr('title', '下一页');
             $ul.addClass('iv-thumb-list');
             $naviWrapper.width(width);
             $navi.width(width + sideMargin * 2);
@@ -318,7 +319,7 @@
             thumbItem.className = 'iv-thumb-item';
             thumbImg.src = src;
             thumbImg.style.opacity = opacity;
-            thumbImg.style.filter = 'alpha(opacity=' + opacity * 100 + ')'; 
+            thumbImg.style.filter = 'alpha(opacity=' + opacity * 100 + ')';
 
             thumbItem.appendChild(thumbImg);
 
@@ -617,50 +618,64 @@
             });
         }
     };
-    /* ImageUtil Class Definition*/
+    /**
+     * 图片工具条类
+     * @param {[type]} container 图片外层容器
+     * @param {[type]} img       图片元素
+     * @param {[type]} options   图片控件参数
+     */
     var ImageTool = function(container, img, options) {
 
         if(!options.enableToolbar) return false;
 
         this.$container = $(container);
         this.$img = $(img);
-        this.$toolbar = null;
-        this.$dragMask = null;
-        this.imgWidth = this.$img.width();
-        this.imgHeight = this.$img.height();
-        this.zoomImgWidth = 0;
-        this.zoomImgHeight = 0;
-        this.rotate = 0;
-        this.isDrag = false;
-        this.isMoved = false;
-        this.isZoom = false;
-        this.dragLeft = 0;
-        this.dragTop = 0;
+        this.$toolbar = null; // 工具条jQuery元素
+        this.$dragMask = null; // 拖动时的遮罩
+        this.imgWidth = this.$img.width(); // 图片自适应宽度
+        this.imgHeight = this.$img.height(); // 图片自适应高度
+        this.zoomImgWidth = 0; // 图片放大后宽度
+        this.zoomImgHeight = 0; // 图片放大后高度
+        this.rotate = 0; // 旋转次数
+        this.isDrag = false; // 是否处于拖动状态
+        this.isMoved = false; // 图片是否移动
+        this.isZoom = false; // 图片是否放大
+        this.dragLeft = 0; // 图片拖动的left位移
+        this.dragTop = 0; // 图片拖动的top位移
         this.init(options);
 
     };
-
+    /* ImageTool方法定义 */
     ImageTool.prototype = {
-
+        /**
+         * ImageToole构造方法
+         */
         constructor: ImageTool,
-
+        /**
+         * 初始化方法
+         * @param  {[type]} options 图片控件参数
+         */
         init: function (options) {
 
             var _t = this,
                 img = _t.$img.get(0);
 
             _t.$img.addClass('iv-image-enhanced');
+            // DOM操作
             _t.$container.append(_t.createToolbar());
             _t.$dragMask = _t.createDragMask();
             _t.$dragMask.insertAfter(_t.$container);
-
+            // 事件绑定
             _t.bindKeydownEvents();
             _t.bindDragEvents();
             _t.imgReady(_t.$img);
             _t.setRotateAnim();
 
         },
-
+        /**
+         * 创建拖拽遮罩
+         * @return {[type]} 拖拽遮罩jQuery元素
+         */
         createDragMask: function () {
 
             var _t = this,
@@ -671,7 +686,10 @@
 
             return $dragMask;
         },
-
+        /**
+         * 创建图片工具条
+         * @return {[type]} 图片工具条jQuery元素
+         */
         createToolbar: function () {
 
             var _t = this,
@@ -682,7 +700,7 @@
                 $zoomInBtn = $('<a href="javascript:void(0)"/>'),
                 $zoomOutBtn = $('<a href="javascript:void(0)"/>'),
                 $closeBtn = $('<a href="javascript:void(0)"/>');
-
+            // 添加CLASS和属性
             $toolbar.addClass('iv-toolbar');
             $toolbarCon.addClass('iv-toolbar-con');
             $rotateLeftBtn.addClass('iv-rotate-left-btn').attr("title","左转");
@@ -710,7 +728,7 @@
             $closeBtn.on('click', function (event) {
                 _t.closeDialog();
             });
-            
+            // DOM操作
             $toolbarCon.append($rotateLeftBtn).append($rotateRightBtn);
             $toolbarCon.append($zoomInBtn).append($zoomOutBtn);
             $toolbarCon.append($closeBtn);
@@ -719,38 +737,9 @@
             _t.$toolbar = $toolbar;
             return $toolbar;
         },
-
-        bindKeydownEvents: function () {
-
-            var _t = this,
-                img = _t.$img.get(0);
-
-            $(document).on("keydown",function(event){
-
-                if(!!img){
-                    switch(event.keyCode){
-                        case 83://s
-                            _t.rotateLeft();
-                            break;
-                        case 70://f
-                            _t.rotateRight();
-                            break;
-                        case 68://d
-                            if(_t.isZoom){
-                                _t.zoomOut();
-                            }else{
-                                _t.zoomIn();
-                            }
-                            break;
-                        case 67://c
-                            _t.closeDialog();
-                            break;
-                    }
-                }
-
-            });
-        },
-
+        /**
+         * 旋转图片
+         */
         setRotateAnim: function () {
 
             var _t = this,
@@ -761,7 +750,7 @@
                 containerHeight = $img.closest('.iv-content').height(),
                 containerWidth = $img.closest('.iv-content').width();
 
-            if(isIE){
+            if(isIE){ // IE浏览器
                 
                 if(_t.rotate % 2 == 1 || _t.rotate % 2 == -1){
                     $img.css({
@@ -776,10 +765,7 @@
                 }
 
                 $img.css('filter', 'progid:DXImageTransform.Microsoft.BasicImage(rotation=' + (_t.rotate < 0 ? 4 - (-_t.rotate % 4) : _t.rotate % 4) + ')');
-
-                console.log($img.css('left') + '  ' + $img.css('top'));
-
-            } else {
+            } else { // 非IE浏览器
                 $img.css('-webkit-transform', 'rotate(' + _t.rotate * 90 + 'deg)')
                     .css('-moz-transform', 'rotate(' + _t.rotate * 90 + 'deg)')
                     .css('-o-transform', 'rotate(' + _t.rotate * 90+'deg)')
@@ -787,65 +773,73 @@
             }
 
         },
-
+        /**
+         * 逆时针旋转
+         */
         rotateLeft: function () {
 
             var _t = this;
 
             _t.rotate--;
             _t.setRotateAnim();
-
-            return false;
         },
-
+        /**
+         * 顺时针旋转
+         */
         rotateRight: function () {
 
             var _t = this;
 
             _t.rotate++;
             _t.setRotateAnim();
-
-            return false;
         },
-
+        /**
+         * 图片拖拽事件绑定
+         */
         bindDragEvents: function () {
-
             var _t = this,
                 $img = _t.$img,
                 img = _t.$img.get(0),
-                dragX,
-                dragY,
-                endDrag = function () {
+                dragX, // 拖拽的X坐标
+                dragY, // 拖拽的Y坐标
+                endDrag = function () { // 拖拽结束时的处理函数
                     _t.isMoved = false;
                     _t.isDrag = false;
-                    _t.dragLeft = parseInt($img.css("left"));
-                    _t.dragTop = parseInt($img.css("top"));
+                    _t.dragLeft = parseInt($img.css("left"), 10);
+                    _t.dragTop = parseInt($img.css("top"), 10);
                     _t.$dragMask.hide();
                     $img.removeClass('iv-in-drag');
                 };
-
+            // 鼠标按下、鼠标移动、鼠标按键弹起时的事件
             $img.on("mousedown",function(event){
 
                 if(event.target === img){
-                    dragX = event.pageX - _t.dragLeft;
-                    dragY = event.pageY - _t.dragTop;
+                    _t.dragLeft = parseInt($img.css('left'), 10);
+                    _t.dragTop = parseInt($img.css('top'), 10);
+                    dragX = event.pageX - _t.dragLeft; // 拖拽坐标起始值
+                    dragY = event.pageY - _t.dragTop; // 拖拽坐标起始值
                     _t.isDrag = true;
                 }
 
                 return false;
             }).on("mousemove",function(event){
 
+
                 if(!_t.isDrag) return false;
 
                 if(event.target === img){
-                    var _x = event.pageX - dragX,
-                        _y = event.pageY - dragY;
 
+                    console.log(_t.dragLeft + '  ' + _t.dragTop);
+                    var _x = event.pageX - dragX, // 拖拽的相对坐标
+                        _y = event.pageY - dragY; // 拖拽的相对坐标
+
+                    _t.$dragMask.show(); // 拖拽时显示遮罩，避免其他元素影响拖拽
                     $img.addClass('iv-in-drag');
-                    _t.$dragMask.show();
-                    img.style.left = _x + "px";
-                    img.style.top = _y + "px";
-                    _t.isMoved = true;
+                    $img.css({
+                        left: _x + "px",
+                        top: _y + "px"
+                    });
+                    _t.isMoved = true; // 产生位移将isMoved置为true
                 }
 
                 event.stopPropagation();
@@ -859,7 +853,7 @@
                 endDrag();
                 return false;
             });
-
+            // 当拖拽意外结束时的处理
             $(document).on('mousemove', function (event) {
 
                 if(event.target !== img) {
@@ -867,21 +861,21 @@
                 } else {
                     return false;
                 }
+
                 endDrag();
                 return false;
-
             });
-
         },
-
+        /**
+         * 放大图片
+         */
         zoomIn: function () {
             var _t = this,
                 img = _t.$img.get(0),
-                src = img.src,
-                left = parseInt(img.style.left),
-                top = parseInt(img.style.top),
-                _left,
-                _top;
+                left = parseInt(img.style.left, 10),
+                top = parseInt(img.style.top, 10),
+                _left, // 图片放大后位置产生的left偏移
+                _top; // 图片放大后位置产生的top偏移
 
             if(_t.isZoom) return false;
 
@@ -894,21 +888,24 @@
             _left = (_t.zoomImgWidth - _t.imgWidth) / 2;
             _top = (_t.zoomImgHeight - _t.imgHeight) / 2;
 
-            img.style.left = left - _left + 'px';
-            img.style.top = top - _top + 'px';
+            _t.$img.css({
+                left: left - _left + 'px',
+                top: top - _top + 'px'
+            });
 
             _t.dragLeft = left - _left;
             _t.dragTop = top - _top;
 
             _t.isZoom = true;
         },
-
+        /**
+         * 缩小图片
+         */
         zoomOut: function () {
             var _t = this,
                 img = _t.$img.get(0),
-                src = img.src,
-                left = parseInt(img.style.left),
-                top = parseInt(img.style.top),
+                left = parseInt(img.style.left, 10),
+                top = parseInt(img.style.top, 10),
                 _left,
                 _top;
 
@@ -923,22 +920,61 @@
             _left = (_t.zoomImgWidth - _t.imgWidth) / 2;
             _top = (_t.zoomImgHeight - _t.imgHeight) / 2;
 
-            img.style.left = left + _left + 'px';
-            img.style.top = top + _top + 'px';
+            _t.$img.css({
+                left: left + _left + 'px',
+                top: top + _top + 'px'
+            });
 
             _t.dragLeft = left + _left;
             _t.dragTop = top + _top;
 
             _t.isZoom = false;
         },
-
-        imgReady: function ($img) {
+        /**
+         * 关闭窗口
+         */
+        closeDialog: function () {
+            var _t = this;
+            _t.$container.closest('.iv-wrapper').hide();
+        },
+        /**
+         * 键盘事件绑定
+         */
+        bindKeydownEvents: function () {
             var _t = this,
-                img = $img.get(0),
-                width = $img.closest('.iv-content').width(),
-                height = $img.closest('.iv-content').height(),
-                imgWidth = $img.width(),
-                imgHeight = $img.height();
+                img = _t.$img.get(0);
+
+            $(document).on("keydown",function(event){
+
+                if(!!img){
+                    switch(event.keyCode){
+                        case 83://S
+                            _t.rotateLeft();
+                            break;
+                        case 70://F
+                            _t.rotateRight();
+                            break;
+                        case 68://D
+                            if(_t.isZoom){
+                                _t.zoomOut();
+                            }else{
+                                _t.zoomIn();
+                            }
+                            break;
+                        case 67://C
+                            _t.closeDialog();
+                            break;
+                    }
+                }
+
+            });
+        },
+        /**
+         * 图片加载完成的事件
+         * @param  {[type]} $img 图片jQuery元素
+         */
+        imgReady: function ($img) {
+            var _t = this;
 
             $img.on('load', function () {
                 _t.$img.removeClass('iv-zoom-in'); // #TODO: 是否要移除iv-zoom-in CLASS
@@ -946,18 +982,14 @@
                 _t.rotate = 0;
                 _t.setRotateAnim();
             });
-        },
-
-        closeDialog: function () {
-            var _t = this;
-
-            _t.$container.closest('.iv-wrapper').hide();
-
         }
-
     };
-
-    /* Integration with jQuery*/
+    /**
+     * 集成到jQuery对象
+     * @param  {[type]} album   图片数组
+     * @param  {[type]} options 图片控件选项
+     * @return {[type]}         imageViewer实例对象数组
+     */
     $.fn.imageViewer = function (album, options) {
 
         var newImageViewers = [],
@@ -988,7 +1020,9 @@
 
         return imageViewers;
     };
-
+    /**
+     * 图片控件默认参数
+     */
     $.fn.imageViewer.defaults = {
 
         enableToolbar: true,
@@ -997,7 +1031,7 @@
         height: 500,
         thumbHeight: 80,
         thumbWidth: 100,
-        currentIndex: 0,
+        currentIndex: 0, // 当前图片索引
         wrapper: false, // 包裹控件的jQuery对象选择器，设置为false时为body
         position: 'fixed', // 'fixed'|'absolute'|'normal'
         mask: true, // true|false
