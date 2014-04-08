@@ -1,5 +1,5 @@
 {
-  "name": "application-name",
+  "name": "ImageViewerPlus",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -8,5 +8,25 @@
   "dependencies": {
     "express": "3.4.8",
     "jade": "*"
-  }
+  },
+  "description": "ImageViewerPlus",
+  "main": "app.js",
+  "devDependencies": {
+    "gulp": "~3.6.0",
+    "gulp-yuidoc": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icefox0801/ImageViewerPlus.git"
+  },
+  "keywords": [
+    "image",
+    "viewer"
+  ],
+  "author": "Zhao Jianfei",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/icefox0801/ImageViewerPlus/issues"
+  },
+  "homepage": "https://github.com/icefox0801/ImageViewerPlus"
 }
