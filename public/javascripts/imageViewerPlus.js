@@ -1,8 +1,13 @@
 /**
- *
- *
+ * @fileOverview imageViewerPlus多图预览控件
+ * @author: Zhao Jianfei
+ * @version: Dev
+ * @Email: icefox0801@hotmail.com
+ * @date: 2014-04-06
+ * @license: MIT
  **/
-(function($){
+
+(function($) {
 
     var isIE = !+[1,],
         isIELt9 = navigator.userAgent.match(/(MSIE 7\.0)|(MSIE 8\.0)/i),
@@ -20,10 +25,37 @@
 
         };
     /**
-     * ImageViewer类定义，ImageViewer类封装并暴露了ImageSlider和ImageTool类的方法
-     * @param {[type]} elem    imageViewer元素
-     * @param {[type]} album   图片数组
-     * @param {[type]} options 控件选项
+     * @name ImageViewer
+     * @class ImageViewer类定义，ImageViewer类封装并暴露了ImageSlider和ImageTool类的方法
+     * @constructor
+     * @param {object} elem    imageViewer元素
+     * @param {array} album   图片数组
+     * @param {object} options 控件选项
+     * @param {number} options.width 图片宽度
+     * @param {boolean} enableToolbar 是否启用图片工具条
+     * : true,
+        /* width, height, thumbHeight, thumbWidth变更时需重新编译scss文件，或手动指定样式 */
+        width: 600,
+        height: 500,
+        thumbHeight: 80,
+        thumbWidth: 100,
+        currentIndex: 0, // 当前图片索引
+        wrapper: false, // 包裹控件的jQuery对象选择器，设置为false时为body
+        position: 'fixed', // 'fixed'|'absolute'|'normal'
+        mask: true, // true|false
+        loop: true, // true|false
+        transitionSetting: {
+
+            enableBtnHoverSwitch: false, // true|false 是否在鼠标悬停时切换图片（悬停结束后切换回原图片）
+            enableBtnHoverSlide: true, // true|false 是否在“前进”、“后退”按钮悬停时滚动图片
+            thumbSilde: 'mousemove', // 'mouseover'|'mousemove'|'none' 
+            slideSpeed: 1000, // 滚动速度：pixels/s
+            opacity: 0.9,
+            fadeTime: 100, // ms
+            thumbOpacity: 0.5,
+            thumbFadeTime: 100, // ms
+            thumbEasing: 'linear'
+        }
      */
     var ImageViewer = function (elem, album, options) {
         var imageSlider = new ImageSlider(elem, album, options);
@@ -32,7 +64,11 @@
             imageTool = new ImageTool(wrapper, img, options);
 
         optionsCache = options;
-        // 重构方法
+        /**
+         * 重构方法
+         * @name ImageViewer.refactor
+         * @return {ImageViewer} 重构后的Imagerviewr实例
+         */
         this.refactor = function () {
             imageSlider.refactor.apply(imageSlider, arguments); // 重构方法
             return this;
@@ -60,10 +96,11 @@
         };
     };
     /**
-     * ImageSlider类定义
-     * @param {[type]} elem    imageSlider元素
-     * @param {[type]} album   图片数组
-     * @param {[type]} options 图片控件选项
+     * @class  ImageSlider
+     * @description ImageSlider类定义
+     * @param {object} elem    imageSlider元素
+     * @param {array} album   图片数组
+     * @param {object} options 图片控件选项
      */
     var ImageSlider = function (elem, album, options) {
         this.album = album; // 图片数组
@@ -87,12 +124,13 @@
     ImageSlider.prototype = {
         /**
          * ImageSlider构造方法
-         * @type {[type]}
+         * 
          */
         constructor: ImageSlider,
         /**
-         * ImageSlider初始化方法
-         * @param  {[type]} options 图片控件选项
+         * 初始化方法
+         * @lends ImageSlider.prototype
+         * @param  {object} options 图片控件选项
          */
         init: function (options) {
             var _t = this,
@@ -112,7 +150,8 @@
         },
         /**
          * 初始化对象参数
-         * @param  {[type]} options 图片控件选项
+         * @memberOf ImageSlider
+         * @param  {object} options 图片控件选项
          */
         initParam: function (options) {
             var _t = this;
@@ -128,9 +167,10 @@
         },
         /**
          * 重构图片控件对象
-         * @param  {[type]} album   图片数组
-         * @param  {[type]} options 图片控件选项
-         * @return {[type]}         imageSlider对象
+         * @memberOf ImageSlider
+         * @param  {array} album   图片数组
+         * @param  {object} options 图片控件选项
+         * @return {object}         imageSlider对象
          */
         refactor: function (album, options) {
             var _t = this,
@@ -165,7 +205,7 @@
         },
         /**
          * 销毁imageSlider对象
-         * @return {[type]} 销毁后imageSlider对象--undefined
+         * @return {undefined} 销毁后imageSlider对象--undefined
          */
         destroy: function () {
             this.$elem.empty();
@@ -175,9 +215,10 @@
         },
         /**
          * 创建图片预览区
-         * @param  {[type]} width  图片外层DIV宽度（图片最大宽度）
-         * @param  {[type]} height 图片外层DIV高度（图片最大高度）
-         * @return {[type]}        图片预览区jQuery元素
+         * @memberOf ImageSlider
+         * @param  {number} width  图片外层DIV宽度（图片最大宽度）
+         * @param  {number} height 图片外层DIV高度（图片最大高度）
+         * @return {object}        图片预览区jQuery元素
          */
         createContainer: function (width, height) {
             var _t = this,
@@ -214,7 +255,7 @@
         },
         /**
          * 创建遮罩
-         * @return {[type]} 遮罩层jQuery元素
+         * @return {object} 遮罩层jQuery元素
          */
         createMask: function () {
             var _t = this,
@@ -226,8 +267,9 @@
         },
         /**
          * 翻页事件绑定
-         * @param  {[type]} $prev 上一张按钮
-         * @param  {[type]} $next 下一张按钮
+         * @memberOf ImageSlider
+         * @param  {object} $prev 上一张按钮
+         * @param  {object} $next 下一张按钮
          */
         bindPagingEvents: function ($prev, $next) {
             var _t = this;
@@ -250,9 +292,10 @@
         },
         /**
          * 创建图片导航区
-         * @param  {[type]} album 图片导航
-         * @param  {[type]} width 图片外层DIV宽度
-         * @return {[type]}       图片导航区jQuery元素
+         * @memberOf ImageSlider
+         * @param  {array} album 图片数组
+         * @param  {number} width 图片外层DIV宽度
+         * @return {object}       图片导航区jQuery元素
          */
         createNavi: function (album, width, thumbWidth) {
             var _t = this,
@@ -286,8 +329,9 @@
         },
         /**
          * 创建缩略图列表
-         * @param  {[type]} album 图片数组
-         * @return {[type]}       缩略图列表jQuery元素
+         * @memberOf ImageSlider
+         * @param  {array} album 图片数组
+         * @return {object}       缩略图列表jQuery元素
          */
         createThumbList: function (album) {
             var _t = this,
@@ -307,8 +351,9 @@
         },
         /**
          * 创建单个缩略图及外层LI
-         * @param  {[type]} src 图片src地址
-         * @return {[type]}     HTMLLIElement
+         * @memberOf ImageSlider
+         * @param  {string} src 图片src地址
+         * @return {object}     HTMLLIElement
          */
         createThumbItem: function (src) {
             var _t = this,
@@ -327,7 +372,8 @@
         },
         /**
          * 缩略图事件绑定
-         * @param  {[type]} $ul 缩略图列表jQuery元素
+         * @memberOf ImageSlider
+         * @param  {object} $ul 缩略图列表jQuery元素
          */
         bindThumbEvents: function ($ul) {
             var _t = this,
@@ -399,7 +445,8 @@
         },
         /**
          * 图片导航区翻页事件绑定
-         * @param  {[type]} $navi 图片导航jQuery元素
+         * @memberOf ImageSlider
+         * @param  {object} $navi 图片导航jQuery元素
          */
         bindThumbPagingEvents: function ($navi) {
             var _t = this,
@@ -450,8 +497,9 @@
         },
         /**
          * 滑动缩略图列表
-         * @param  {Boolean} isForword 是否为前进方向:true为向前
-         * @return {[type]}            setInterval计时器
+         * @memberOf ImageSlider
+         * @param  {boolean} isForword 是否为前进方向:true为向前
+         * @return {object}            setInterval计时器
          */
         slideThumb: function (isForword) {
             var _t = this,
@@ -483,7 +531,8 @@
         },
         /**
          * 设置图片
-         * @param {[type]} index 图片的索引
+         * @memberOf ImageSlider
+         * @param {number} index 图片的索引
          */
         setIndex: function (index) {
             var _t = this;
@@ -497,7 +546,8 @@
         },
         /**
          * 预览图片
-         * @param  {[type]} index 图片的索引
+         * @memberOf ImageSlider
+         * @param  {number} index 图片的索引
          */
         previewIndex: function (index) {
             var _t = this;
@@ -511,7 +561,8 @@
         },
         /**
          * 高亮缩略图并添加相应CLASS NAME
-         * @param  {[type]} index 图片的索引
+         * @memberOf ImageSlider
+         * @param  {number} index 图片的索引
          */
         highlightThumb: function (index, className) {
             var _t = this,
@@ -528,7 +579,8 @@
         },
         /**
          * 将当前的缩略图居中
-         * @param  {[type]} index 当前图片的索引
+         * @memberOf ImageSlider
+         * @param  {number} index 当前图片的索引
          */
         centerThumb: function (index) {
             var _t = this,
@@ -545,8 +597,9 @@
         },
         /**
          * 滚动缩略图导航条
-         * @param  {[type]} offset 滚动到的位移（缩略图列表的margin-left）
-         * @param  {[type]} easing 动画类型
+         * @memberOf ImageSlider
+         * @param  {number} offset 滚动到的位移（缩略图列表的margin-left）
+         * @param  {number} easing 动画类型
          */
         scrollThumb: function (offset, easing) {
             var _t = this,
@@ -566,7 +619,8 @@
         },
         /**
          * 切换图片
-         * @param  {[type]} index 图片的索引
+         * @memberOf ImageSlider
+         * @param  {number} index 图片的索引
          */
         transformImage: function (index) {
             var _t = this,
@@ -597,7 +651,6 @@
         },
         /**
          * 绑定按键事件
-         * @return {[type]} [description]
          */
         bindKeydownEvents: function () {
             var _t = this;
@@ -619,10 +672,11 @@
         }
     };
     /**
-     * 图片工具条类
-     * @param {[type]} container 图片外层容器
-     * @param {[type]} img       图片元素
-     * @param {[type]} options   图片控件参数
+     * @class ImageTool
+     * @description 图片工具条类
+     * @param {object} container 图片外层容器
+     * @param {object} img       图片元素
+     * @param {object} options   图片控件参数
      */
     var ImageTool = function(container, img, options) {
 
@@ -653,7 +707,7 @@
         constructor: ImageTool,
         /**
          * 初始化方法
-         * @param  {[type]} options 图片控件参数
+         * @param  {object} options 图片控件参数
          */
         init: function (options) {
 
@@ -674,7 +728,7 @@
         },
         /**
          * 创建拖拽遮罩
-         * @return {[type]} 拖拽遮罩jQuery元素
+         * @return {object} 拖拽遮罩jQuery元素
          */
         createDragMask: function () {
 
@@ -688,7 +742,7 @@
         },
         /**
          * 创建图片工具条
-         * @return {[type]} 图片工具条jQuery元素
+         * @return {object} 图片工具条jQuery元素
          */
         createToolbar: function () {
 
@@ -828,8 +882,6 @@
                 if(!_t.isDrag) return false;
 
                 if(event.target === img){
-
-                    console.log(_t.dragLeft + '  ' + _t.dragTop);
                     var _x = event.pageX - dragX, // 拖拽的相对坐标
                         _y = event.pageY - dragY; // 拖拽的相对坐标
 
@@ -947,6 +999,7 @@
             $(document).on("keydown",function(event){
 
                 if(!!img){
+
                     switch(event.keyCode){
                         case 83://S
                             _t.rotateLeft();
@@ -965,13 +1018,14 @@
                             _t.closeDialog();
                             break;
                     }
+
                 }
 
             });
         },
         /**
          * 图片加载完成的事件
-         * @param  {[type]} $img 图片jQuery元素
+         * @param  {object} $img 图片jQuery元素
          */
         imgReady: function ($img) {
             var _t = this;
@@ -986,9 +1040,9 @@
     };
     /**
      * 集成到jQuery对象
-     * @param  {[type]} album   图片数组
-     * @param  {[type]} options 图片控件选项
-     * @return {[type]}         imageViewer实例对象数组
+     * @param  {array} album   图片数组
+     * @param  {object} options 图片控件选项
+     * @return {array}         imageViewer实例对象数组
      */
     $.fn.imageViewer = function (album, options) {
 
