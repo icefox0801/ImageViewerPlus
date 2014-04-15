@@ -10,7 +10,7 @@
 (function($) {
 
     var isIE = !+[1,],
-        isIELt9 = navigator.userAgent.match(/(MSIE 7\.0)|(MSIE 8\.0)/i),
+        isIELt9 = navigator.userAgent.match(/(MSIE 7\.0)|(MSIE 8\.0)/i), // 是否为IE9以下版本
         thumbMargin = 5, // 图片缩略图的间隔
         thumbBorder = 3, // 图片缩略图边框厚度
         sideMargin = 40, // 图片显示区两侧的留白
@@ -28,34 +28,29 @@
      * @name ImageViewer
      * @class ImageViewer类定义，ImageViewer类封装并暴露了ImageSlider和ImageTool类的方法
      * @constructor
-     * @param {object} elem    imageViewer元素
-     * @param {array} album   图片数组
-     * @param {object} options 控件选项
-     * @param {number} options.width 图片宽度
-     * @param {boolean} enableToolbar 是否启用图片工具条
-     * : true,
-        /* width, height, thumbHeight, thumbWidth变更时需重新编译scss文件，或手动指定样式 */
-        width: 600,
-        height: 500,
-        thumbHeight: 80,
-        thumbWidth: 100,
-        currentIndex: 0, // 当前图片索引
-        wrapper: false, // 包裹控件的jQuery对象选择器，设置为false时为body
-        position: 'fixed', // 'fixed'|'absolute'|'normal'
-        mask: true, // true|false
-        loop: true, // true|false
-        transitionSetting: {
-
-            enableBtnHoverSwitch: false, // true|false 是否在鼠标悬停时切换图片（悬停结束后切换回原图片）
-            enableBtnHoverSlide: true, // true|false 是否在“前进”、“后退”按钮悬停时滚动图片
-            thumbSilde: 'mousemove', // 'mouseover'|'mousemove'|'none' 
-            slideSpeed: 1000, // 滚动速度：pixels/s
-            opacity: 0.9,
-            fadeTime: 100, // ms
-            thumbOpacity: 0.5,
-            thumbFadeTime: 100, // ms
-            thumbEasing: 'linear'
-        }
+     * @param {object}  elem        imageViewer元素
+     * @param {array}   album       图片数组
+     * @param {object}  options                 控件选项
+     * @param {number}  options.width           图片宽度
+     * @param {number}  options.height          图片高度
+     * @param {number}  options.thumbWidth      缩略图片宽度
+     * @param {number}  options.thumbHeight     缩略图片高度
+     * @param {boolean} options.enableToolbar   是否启用图片工具条
+     * @param {number}  options.currentIndex    当前图片索引
+     * @param {string}  options.wrapper         包裹控件的jQuery对象选择器，设置为false时为body
+     * @param {string}  options.position        控件定位：'fixed'|'absolute'|'normal'
+     * @param {boolean} options.mask            是否显示遮罩层
+     * @param {boolean} options.loop            是否循环播放图片
+     * @param {object}  options.transitionSetting                       动画选项
+     * @param {boolean} options.transitionSetting.enableSlideSwitch     是否在鼠标悬停时切换图片（悬停结束后切换回原图片）
+     * @param {boolean} options.transitionSetting.enableBtnHoverSlide   是否在“前进”、“后退”按钮悬停时滚动图片
+     * @param {string}  options.transitionSetting.thumbSilde            缩略图滑动触发方式：'mouseover'|'mousemove'|'none' 
+     * @param {boolean} options.transitionSetting.slideSpeed            滚动速度：pixels/s
+     * @param {number}  options.transitionSetting.opacity               图片切换时的透明度
+     * @param {number}  options.transitionSetting.fadeTime              图片切换时的褪色时间
+     * @param {number}  options.transitionSetting.thumbOpacity          缩略图切换时的透明度
+     * @param {number}  options.transitionSetting.thumbFadeTime         缩略图切换时的褪色时间
+     * @param {number}  options.transitionSetting.thumbEasing           缩略图切换的动画方式：'linear' 
      */
     var ImageViewer = function (elem, album, options) {
         var imageSlider = new ImageSlider(elem, album, options);
@@ -453,7 +448,7 @@
                 isHovered = false, // 鼠标是否悬停在翻页按钮上
                 slideTimer, // 滑动动画计时器
                 enableBtnHoverSlide = _t.transitionSetting.enableBtnHoverSlide,
-                enableBtnHoverSwitch = _t.transitionSetting.enableBtnHoverSwitch;
+                enableSlideSwitch = _t.transitionSetting.enableSlideSwitch;
             // 翻页按钮鼠标悬停、鼠标移开、点击事件
             $navi.find('.prev,.next').on('mouseover', function (event) {
                 var $t = $(this),
@@ -489,7 +484,7 @@
                     isForword = $t[0].className.match('prev') ? false : true,
                     index = _t.currentIndex + (isForword ? _t.thumbNumber : (-_t.thumbNumber));
 
-                if(enableBtnHoverSwitch) return false;
+                if(enableSlideSwitch) return false;
                 // 向前或向后翻过thumbNumber张图片
                 index = index < 0 ? 0 : (index > _t.maxIndex ? _t.maxIndex : index);
                 _t.setIndex(index);
@@ -508,7 +503,7 @@
                 slideSpeed = _t.transitionSetting.slideSpeed,
                 slideTime = _t.thumbWidth / slideSpeed * 1000,
                 enableBtnHoverSlide = _t.transitionSetting.enableBtnHoverSlide,
-                enableBtnHoverSwitch = _t.transitionSetting.enableBtnHoverSwitch;
+                enableSlideSwitch = _t.transitionSetting.enableSlideSwitch;
             /* 开始计时以持续滑动，每slideTime时间检测鼠标是否移开，若移开，则停止滑动 */
             return setInterval(function () {
                 var marginLeft = _t.thumbOffset;
@@ -518,7 +513,7 @@
                 } else if (!_t.$ul.is(':animated')){
                     var offset = _t.thumbOffset + (isForword ? thumbItemWidth : -thumbItemWidth);
 
-                    if(enableBtnHoverSwitch) {
+                    if(enableSlideSwitch) {
                         /* 鼠标悬停时切换图片 */
                         _t.setIndex(_t.currentIndex + (isForword ? 1 : -1));
                     } else {
@@ -1092,7 +1087,7 @@
         loop: true, // true|false
         transitionSetting: {
 
-            enableBtnHoverSwitch: false, // true|false 是否在鼠标悬停时切换图片（悬停结束后切换回原图片）
+            enableSlideSwitch: false, // true|false 是否在鼠标悬停时切换图片（悬停结束后切换回原图片）
             enableBtnHoverSlide: true, // true|false 是否在“前进”、“后退”按钮悬停时滚动图片
             thumbSilde: 'mousemove', // 'mouseover'|'mousemove'|'none' 
             slideSpeed: 1000, // 滚动速度：pixels/s
