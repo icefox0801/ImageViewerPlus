@@ -68,7 +68,11 @@
             imageSlider.refactor.apply(imageSlider, arguments); // 重构方法
             return this;
         };
-        // 销毁方法
+        /**
+         * 销毁方法
+         * @name ImageViewer.destroy
+         * @return {ImageViewer} 被销毁的Imagerviewr实例
+         */
         this.destroy = function () {
             var spliceIndex = imageViewers.length;
             
@@ -81,11 +85,18 @@
 
             return imageViewers.splice(spliceIndex, 1);
         };
-        // 添加图片
+        /**
+         * 添加图片
+         * @name ImageViewer.addImg
+         */
         this.addImg = function () {
             imageSlider.addImg.apply(imageSlider, arguments);
         };
-        // 跳转到索引为index的图片
+        /**
+         * 跳转到索引为index的图片
+         * @name ImageViewer.setIndex
+         * @param {number} index 图片索引
+         */
         this.setIndex = function (index) {
             imageSlider.setIndex.call(imageSlider, index);
         };
@@ -124,7 +135,7 @@
         constructor: ImageSlider,
         /**
          * 初始化方法
-         * @lends ImageSlider.prototype
+         * @memberOf ImageSlider
          * @param  {object} options 图片控件选项
          */
         init: function (options) {
@@ -697,11 +708,12 @@
     /* ImageTool方法定义 */
     ImageTool.prototype = {
         /**
-         * ImageToole构造方法
+         * ImageTool构造方法
          */
         constructor: ImageTool,
         /**
          * 初始化方法
+         * @memberOf ImageTool
          * @param  {object} options 图片控件参数
          */
         init: function (options) {
@@ -723,6 +735,7 @@
         },
         /**
          * 创建拖拽遮罩
+         * @memberOf ImageTool
          * @return {object} 拖拽遮罩jQuery元素
          */
         createDragMask: function () {
@@ -737,6 +750,7 @@
         },
         /**
          * 创建图片工具条
+         * @memberOf ImageTool
          * @return {object} 图片工具条jQuery元素
          */
         createToolbar: function () {
@@ -788,6 +802,7 @@
         },
         /**
          * 旋转图片
+         * @memberOf ImageTool
          */
         setRotateAnim: function () {
 
@@ -824,6 +839,7 @@
         },
         /**
          * 逆时针旋转
+         * @memberOf ImageTool
          */
         rotateLeft: function () {
 
@@ -834,6 +850,7 @@
         },
         /**
          * 顺时针旋转
+         * @memberOf ImageTool
          */
         rotateRight: function () {
 
@@ -844,6 +861,7 @@
         },
         /**
          * 图片拖拽事件绑定
+         * @memberOf ImageTool
          */
         bindDragEvents: function () {
             var _t = this,
@@ -915,6 +933,7 @@
         },
         /**
          * 放大图片
+         * @memberOf ImageTool
          */
         zoomIn: function () {
             var _t = this,
@@ -947,6 +966,7 @@
         },
         /**
          * 缩小图片
+         * @memberOf ImageTool
          */
         zoomOut: function () {
             var _t = this,
@@ -979,6 +999,7 @@
         },
         /**
          * 关闭窗口
+         * @memberOf ImageTool
          */
         closeDialog: function () {
             var _t = this;
@@ -986,6 +1007,7 @@
         },
         /**
          * 键盘事件绑定
+         * @memberOf ImageTool
          */
         bindKeydownEvents: function () {
             var _t = this,
@@ -1020,6 +1042,7 @@
         },
         /**
          * 图片加载完成的事件
+         * @memberOf ImageTool
          * @param  {object} $img 图片jQuery元素
          */
         imgReady: function ($img) {
@@ -1035,6 +1058,7 @@
     };
     /**
      * 集成到jQuery对象
+     * @method
      * @param  {array} album   图片数组
      * @param  {object} options 图片控件选项
      * @return {array}         imageViewer实例对象数组
